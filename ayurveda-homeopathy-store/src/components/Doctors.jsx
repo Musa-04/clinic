@@ -1,129 +1,183 @@
-import React from 'react';
-import { UserCheck, Stethoscope, Calendar, CheckCircle2, ShieldCheck } from 'lucide-react';
+import React from "react";
+import {
+    Stethoscope,
+    Calendar,
+    CheckCircle2,
+    ShieldCheck,
+} from "lucide-react";
+
+import doctorMozim from "../assets/Doctor-mozim.png";
+import doctorKarishma from "../assets/doctor-karishma.png";
 
 const doctorsData = [
     {
-        name: 'Dr. Mozim Malik',
-        qualification: 'BHMS, CCH',
-        title: 'Homeopathic Physician',
-        system: 'Homeopathy Specialist',
-        description: 'Experienced in treating chronic conditions, digestive disorders, skin ailments, and allergic diseases using gentle, constitutional Homeopathic remedies.',
-        highlights: ['Constitutional Healing', 'Chronic Care Expert', 'Safe & Gentle Remedies'],
-        badgeBg: 'bg-emerald-100 text-emerald-850 border-emerald-200',
-        avatarGradient: 'from-emerald-700 via-teal-800 to-stone-800',
-        avatarIconColor: 'text-emerald-100',
+        name: "Dr. Mozim Malik",
+        qualification: "BHMS, CCH",
+        title: "Homeopathic Physician",
+        system: "Homeopathy Specialist",
+        image: doctorMozim,
+        description:
+            "Experienced in treating chronic conditions, digestive disorders, skin ailments, and allergic diseases using Homeopathic healthcare approaches.",
+        highlights: [
+            "Constitutional Healing",
+            "Chronic Care",
+            "Personalized Treatment",
+        ],
+        badgeBg: "bg-emerald-100 text-emerald-800 border-emerald-200",
     },
     {
-        name: 'Dr. Karishma Malik',
-        qualification: 'BAMS, YIC',
-        title: 'Ayurvedic Physician',
-        system: 'Ayurveda Specialist',
-        description: 'Specializes in Ayurvedic Nadi Pariksha, herbal therapy, PCOD/PCOS management, metabolic health, joint care, and lifestyle wellness consultations.',
-        highlights: ['Ayurvedic Therapeutics', 'Women\'s Health & PCOD', 'Nadi & Dosha Assessment'],
-        badgeBg: 'bg-amber-100 text-amber-900 border-amber-200',
-        avatarGradient: 'from-teal-700 via-emerald-800 to-stone-800',
-        avatarIconColor: 'text-amber-100',
+        name: "Dr. Karishma Malik",
+        qualification: "BAMS, YIC",
+        title: "Ayurvedic Physician",
+        system: "Ayurveda Specialist",
+        image: doctorKarishma,
+        description:
+            "Provides Ayurvedic healthcare with a focus on women's health, PCOD/PCOS, joint care, metabolic wellness, and lifestyle guidance.",
+        highlights: [
+            "Ayurvedic Therapeutics",
+            "Women's Health & PCOD",
+            "Nadi & Dosha Assessment",
+        ],
+        badgeBg: "bg-amber-100 text-amber-900 border-amber-200",
     },
 ];
 
 const Doctors = () => {
     return (
-        <section id="doctors" className="py-14 sm:py-20 bg-white border-t border-stone-200/80 w-full max-w-full">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section
+            id="doctors"
+            className="w-full border-t border-stone-200/80 bg-white py-14 sm:py-20"
+        >
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-                {/* Section Heading */}
-                <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4 mb-10 sm:mb-14">
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/80 text-emerald-850 text-xs font-bold uppercase tracking-wider">
-                        <Stethoscope className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                {/* =========================
+            SECTION HEADER
+        ========================== */}
+                <div className="mx-auto mb-10 max-w-3xl text-center sm:mb-14">
+
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-100/80 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800">
+                        <Stethoscope className="h-3.5 w-3.5 text-emerald-600" />
                         <span>Expert Medical Team</span>
                     </div>
-                    <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-stone-900 tracking-tight leading-tight">
+
+                    <h2 className="text-2xl font-extrabold leading-tight tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
                         Meet Our Doctors
                     </h2>
-                    <p className="text-stone-600 text-sm sm:text-base lg:text-lg leading-relaxed">
-                        Our dedicated physicians bring together years of clinical expertise in Homeopathy and Ayurveda to deliver personalized health plans.
+
+                    <p className="mt-3 text-sm leading-relaxed text-stone-600 sm:mt-4 sm:text-base lg:text-lg">
+                        Our dedicated physicians provide Homeopathic and Ayurvedic
+                        healthcare with a personalized approach to your individual needs.
                     </p>
                 </div>
 
-                {/* Doctor Cards Grid - Stacked on Mobile, 2-Col on Desktop */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto text-left">
-                    {doctorsData.map((doc, index) => (
-                        <div
-                            key={index}
-                            className="bg-stone-50/80 rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-stone-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                {/* =========================
+            DOCTOR CARDS
+        ========================== */}
+                <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
+
+                    {doctorsData.map((doc) => (
+                        <article
+                            key={doc.name}
+                            className="flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-stone-50 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:rounded-3xl"
                         >
-                            <div>
 
-                                {/* Photo Placeholder Area - Mobile Responsive */}
-                                <div className="relative w-full aspect-[16/9] sm:aspect-[16/10] rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-stone-200 via-emerald-100/40 to-stone-100 border border-stone-300/60 flex flex-col items-center justify-center p-4 sm:p-6 text-center shadow-inner mb-5">
+                            {/* =========================
+                  DOCTOR IMAGE
+              ========================== */}
+                            <div className="p-3 pb-0 sm:p-4 sm:pb-0">
 
-                                    {/* Clean Doctor Avatar Placeholder */}
-                                    <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr ${doc.avatarGradient} flex items-center justify-center text-white shadow-md mb-2 sm:mb-3 ring-4 ring-white shrink-0`}>
-                                        <UserCheck className={`w-8 h-8 sm:w-10 sm:h-10 ${doc.avatarIconColor}`} />
-                                    </div>
+                                <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 via-stone-100 to-teal-50 sm:rounded-2xl">
 
-                                    <span className="inline-block px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-white/90 text-stone-700 border border-stone-200 shadow-2xs">
-                                        Doctor Photo Placeholder
-                                    </span>
+                                    <img
+                                        src={doc.image}
+                                        alt={`${doc.name} - ${doc.title}`}
+                                        className="h-full w-full object-contain object-center transition-transform duration-500 hover:scale-[1.02]"
+                                    />
+
                                 </div>
 
-                                {/* System Badge & Verified Indicator */}
-                                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${doc.badgeBg}`}>
+                            </div>
+
+                            {/* =========================
+                  CARD CONTENT
+              ========================== */}
+                            <div className="flex flex-1 flex-col p-5 sm:p-7">
+
+                                {/* System + Qualified */}
+                                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+
+                                    <span
+                                        className={`rounded-full border px-3 py-1 text-xs font-bold ${doc.badgeBg}`}
+                                    >
                                         {doc.system}
                                     </span>
-                                    <div className="flex items-center gap-1 text-xs text-emerald-700 font-semibold">
-                                        <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                                        <span>Verified Physician</span>
+
+                                    <div className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                                        <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                                        <span>Qualified Doctor</span>
                                     </div>
+
                                 </div>
 
-                                {/* Doctor Name & Qualifications */}
-                                <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-stone-900 tracking-tight">
+                                {/* Doctor Name */}
+                                <h3 className="text-xl font-extrabold tracking-tight text-stone-900 sm:text-2xl lg:text-3xl">
                                     {doc.name}
                                 </h3>
 
-                                <div className="flex flex-wrap items-center gap-2 mt-1 mb-3">
-                                    <span className="text-sm sm:text-base font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100">
+                                {/* Qualification */}
+                                <div className="mt-2 mb-4 flex flex-wrap items-center gap-2">
+
+                                    <span className="rounded-md border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-sm font-bold text-emerald-800">
                                         {doc.qualification}
                                     </span>
-                                    <span className="text-xs sm:text-sm font-semibold text-stone-600">
+
+                                    <span className="text-xs font-semibold text-stone-600 sm:text-sm">
                                         • {doc.title}
                                     </span>
+
                                 </div>
 
-                                {/* Bio Description */}
-                                <p className="text-stone-600 text-xs sm:text-sm leading-relaxed mb-5">
+                                {/* Description */}
+                                <p className="mb-5 text-sm leading-7 text-stone-600">
                                     {doc.description}
                                 </p>
 
-                                {/* Clinical Highlights */}
-                                <div className="space-y-2 mb-6 pt-4 border-t border-stone-200/70">
-                                    {doc.highlights.map((item, idx) => (
-                                        <div key={idx} className="flex items-center gap-2 text-xs font-semibold text-stone-700">
-                                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                {/* Highlights */}
+                                <div className="mb-6 space-y-2 border-t border-stone-200 pt-4">
+
+                                    {doc.highlights.map((item) => (
+                                        <div
+                                            key={item}
+                                            className="flex items-center gap-2 text-sm font-medium text-stone-700"
+                                        >
+                                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
                                             <span>{item}</span>
                                         </div>
                                     ))}
+
+                                </div>
+
+                                {/* Contact Button */}
+                                <div className="mt-auto border-t border-stone-200 pt-4">
+
+                                    <a
+                                        href="#contact"
+                                        className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-emerald-800/20 transition-all duration-200 hover:bg-emerald-800 active:bg-emerald-900"
+                                    >
+                                        <Calendar className="h-4 w-4 text-emerald-200" />
+
+                                        <span>
+                                            Contact {doc.name.replace("Dr. ", "")}
+                                        </span>
+                                    </a>
+
                                 </div>
 
                             </div>
-
-                            {/* Consultation Action Button */}
-                            <div className="pt-4 border-t border-stone-200/80">
-                                <a
-                                    href="#contact"
-                                    className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-700 active:bg-emerald-800 hover:bg-emerald-800 text-white font-bold text-sm shadow-md shadow-emerald-800/20 transition-all duration-200 min-h-[48px]"
-                                >
-                                    <Calendar className="w-4 h-4 text-emerald-200 shrink-0" />
-                                    <span>Contact {doc.name.split(' ')[1]}</span>
-                                </a>
-                            </div>
-
-                        </div>
+                        </article>
                     ))}
-                </div>
 
+                </div>
             </div>
         </section>
     );

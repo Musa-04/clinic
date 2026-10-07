@@ -1,5 +1,6 @@
 import React from 'react';
-import { ImageOff, Eye, Leaf, FlaskConical } from 'lucide-react';
+import { ImageOff, Eye, Leaf, FlaskConical, ShoppingCart } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 /**
  * ProductCard
@@ -17,6 +18,8 @@ const ProductCard = ({ product }) => {
 
     const BadgeIcon = isAyurvedic ? Leaf : FlaskConical;
 
+    const { addItem } = useCart() || {};
+
     return (
         <div className="group flex flex-col bg-white rounded-2xl border border-stone-200/90 shadow-xs hover:shadow-xl hover:border-emerald-300/60 transition-all duration-300 overflow-hidden transform hover:-translate-y-1">
 
@@ -27,7 +30,7 @@ const ProductCard = ({ product }) => {
                     <img
                         src={image}
                         alt={name}
-                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                     />
                 ) : (
@@ -66,13 +69,25 @@ const ProductCard = ({ product }) => {
                         ₹{price.toLocaleString('en-IN')}
                     </span>
 
-                    <button
-                        type="button"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-emerald-800/20 transition-all duration-200 min-h-[36px] cursor-pointer shrink-0"
-                    >
-                        <Eye className="w-3.5 h-3.5 text-emerald-200 shrink-0" />
-                        <span>View Details</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            aria-label={`Add ${name} to cart`}
+                            onClick={() => addItem && addItem(product, 1)}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-emerald-800/20 transition-all duration-200 min-h-[36px] cursor-pointer"
+                        >
+                            <ShoppingCart className="w-3.5 h-3.5 text-emerald-200 shrink-0" />
+                            <span>Add</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-stone-200 bg-white text-stone-700 text-xs sm:text-sm font-semibold transition-all duration-200 min-h-[36px] cursor-pointer"
+                        >
+                            <Eye className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                            <span>View</span>
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -81,3 +96,4 @@ const ProductCard = ({ product }) => {
 };
 
 export default ProductCard;
+

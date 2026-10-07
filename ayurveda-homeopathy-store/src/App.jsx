@@ -1,137 +1,430 @@
-import React from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import About from './components/About';
-import Products from './components/Products';
-import WhatWeTreat from './components/WhatWeTreat';
-import Doctors from './components/Doctors';
-import WhyChooseUs from './components/WhyChooseUs';
-import HowItWorks from './components/HowItWorks';
-import Footer from './components/Footer';
-import { Stethoscope, Phone, Clock, Send } from 'lucide-react';
+import React, { useState } from "react";
+import { Stethoscope, CheckCircle } from "lucide-react";
+
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import WhatWeTreat from "./components/WhatWeTreat";
+import Doctors from "./components/Doctors";
+import About from "./components/About";
+import Products from "./components/Products";
+import WhyChooseUs from "./components/WhyChooseUs";
+import HowItWorks from "./components/HowItWorks";
+import Footer from "./components/Footer";
+import Testimonials from "./components/Testimonials";
+import CartDrawer from "./components/CartDrawer";
+import Checkout from "./components/Checkout";
 
 function App() {
-  return (
-    <div className="min-h-screen bg-stone-50 flex flex-col font-sans text-stone-800 antialiased selection:bg-emerald-200 selection:text-emerald-900 w-full max-w-full overflow-x-hidden">
+  // Appointment form state
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [doctor, setDoctor] = useState("");
+  const [concern, setConcern] = useState("");
+  const [preferredDate, setPreferredDate] = useState("");
+  const [messageText, setMessageText] = useState("");
 
-      {/* 1. Responsive Navbar */}
+  const [validationError, setValidationError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    setValidationError("");
+    setSuccessMessage("");
+
+    // Required field validation
+    if (!fullName.trim()) {
+      setValidationError("Please enter your full name.");
+      return;
+    }
+
+    if (!phone.trim()) {
+      setValidationError("Please enter your phone number.");
+      return;
+    }
+
+    if (!doctor) {
+      setValidationError("Please select a doctor.");
+      return;
+    }
+
+    if (!concern) {
+      setValidationError("Please select your concern.");
+      return;
+    }
+
+    if (!preferredDate) {
+      setValidationError("Please pick a preferred date.");
+      return;
+    }
+
+    // Local appointment submission
+    setSuccessMessage(
+      "Your appointment request has been submitted successfully. Our clinic team will contact you soon."
+    );
+
+    // Clear form
+    setFullName("");
+    setPhone("");
+    setEmail("");
+    setDoctor("");
+    setConcern("");
+    setPreferredDate("");
+    setMessageText("");
+  };
+
+  return (
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-stone-50 font-sans text-stone-800 antialiased selection:bg-emerald-200 selection:text-emerald-900">
+      {/* Navbar */}
       <Navbar />
 
-      {/* Main Content Body */}
-      <main className="flex-grow w-full max-w-full">
-
-        {/* 2. Mobile-First Hero Section */}
+      <main className="w-full max-w-full flex-grow">
+        {/* Hero */}
         <Hero />
 
-        {/* 3. About Malik's Polyclinic */}
-        <About />
-
-        {/* 4. Our Medicines / Products */}
-        <Products />
-
-        {/* 5. Responsive What We Treat Section */}
+        {/* What We Treat */}
         <WhatWeTreat />
 
-        {/* 6. Responsive Meet Our Doctors Section */}
+        {/* Doctors */}
         <Doctors />
 
-        {/* 7. Why Choose Malik's Polyclinic */}
+        {/* About */}
+        <About />
+
+        {/* Products */}
+        <Products />
+
+        {/* Why Choose Us */}
         <WhyChooseUs />
 
-        {/* 8. How It Works */}
+        {/* How It Works */}
         <HowItWorks />
 
-        {/* 9. Mobile-First Contact & Appointment Section */}
-        <section id="contact" className="py-14 sm:py-20 bg-gradient-to-b from-stone-100 to-emerald-950 text-white relative w-full max-w-full">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-emerald-950 rounded-2xl sm:rounded-3xl p-5 sm:p-10 lg:p-12 border border-emerald-700/40 shadow-2xl backdrop-blur-md grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center text-left">
+        {/* Testimonials */}
+        <Testimonials />
 
-              {/* Left Column Text */}
-              <div className="lg:col-span-7 space-y-4 sm:space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-800/60 text-emerald-200 text-xs font-semibold uppercase tracking-wider max-w-full">
-                  <Stethoscope className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span className="truncate">Personalized Medical Care</span>
+        {/* Appointment */}
+        <section
+          id="contact"
+          className="w-full bg-gradient-to-b from-stone-100 to-emerald-950 py-14 sm:py-20"
+        >
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
+              {/* Left Content */}
+              <div className="flex flex-col justify-center lg:col-span-5">
+                <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-emerald-800/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-200">
+                  <Stethoscope className="h-4 w-4 shrink-0 text-emerald-400" />
+                  <span>Appointment</span>
                 </div>
 
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-snug sm:leading-tight">
-                  Book a Consultation at Malik's Polyclinic
+                <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl">
+                  Book an Appointment
                 </h2>
 
-                <p className="text-emerald-100/80 text-sm sm:text-base lg:text-lg leading-relaxed">
-                  Consult with Dr. Mozim Malik (BHMS, CCH) or Dr. Karishma Malik (BAMS, YIC) for natural, root-cause healing tailored specifically for your body.
+                <p className="mt-4 max-w-lg text-sm leading-7 text-emerald-100/80 sm:text-base">
+                  Schedule a consultation with our Homeopathic or Ayurvedic
+                  doctor. Share your details and health concern, and our clinic
+                  team can assist you with the next steps.
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2 text-xs sm:text-sm">
-                  <div className="flex items-center gap-3 p-3 sm:p-3.5 rounded-xl bg-emerald-900/60 border border-emerald-800/60">
-                    <Phone className="w-5 h-5 text-emerald-400 shrink-0" />
+                <div className="mt-8 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-800/60">
+                      <CheckCircle className="h-4 w-4 text-emerald-300" />
+                    </div>
+
                     <div>
-                      <p className="text-[11px] font-semibold text-emerald-300">Call / WhatsApp</p>
-                      <p className="font-bold text-white">Contact Doctors</p>
+                      <h3 className="text-sm font-bold text-white">
+                        Personalized Consultation
+                      </h3>
+                      <p className="mt-1 text-sm leading-6 text-emerald-100/70">
+                        Discuss your health concerns with our qualified
+                        practitioners.
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-3 sm:p-3.5 rounded-xl bg-emerald-900/60 border border-emerald-800/60">
-                    <Clock className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-800/60">
+                      <CheckCircle className="h-4 w-4 text-emerald-300" />
+                    </div>
+
                     <div>
-                      <p className="text-[11px] font-semibold text-emerald-300">Clinic Hours</p>
-                      <p className="font-bold text-white">Mon - Sat (9AM - 7PM)</p>
+                      <h3 className="text-sm font-bold text-white">
+                        Natural Healthcare
+                      </h3>
+                      <p className="mt-1 text-sm leading-6 text-emerald-100/70">
+                        Explore Homeopathic and Ayurvedic approaches based on
+                        your individual needs.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-800/60">
+                      <CheckCircle className="h-4 w-4 text-emerald-300" />
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-white">
+                        Easy Appointment Request
+                      </h3>
+                      <p className="mt-1 text-sm leading-6 text-emerald-100/70">
+                        Submit your details and our clinic team will get in
+                        touch with you.
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column: Clean Quick Appointment Inquiry Form */}
-              <div className="lg:col-span-5 bg-white text-stone-900 rounded-xl sm:rounded-2xl p-5 sm:p-8 shadow-xl border border-stone-200 w-full max-w-full">
-                <h3 className="text-lg sm:text-xl font-bold text-stone-900 mb-1">Schedule Consultation</h3>
-                <p className="text-stone-500 text-xs mb-5">Fill in your details and our clinic team will get in touch.</p>
+              {/* Appointment Form */}
+              <div className="lg:col-span-7">
+                <div className="rounded-2xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-8">
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-stone-900 sm:text-2xl">
+                      Appointment Details
+                    </h3>
 
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-4 text-left">
-                  <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">Your Full Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Rahul Sharma"
-                      className="w-full px-4 py-3 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm min-h-[44px]"
-                    />
+                    <p className="mt-1 text-sm text-stone-500">
+                      Please fill in your details below.
+                    </p>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">Phone Number</label>
-                    <input
-                      type="tel"
-                      placeholder="+91 98765 43210"
-                      className="w-full px-4 py-3 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm min-h-[44px]"
-                    />
-                  </div>
+                  {/* Validation Error */}
+                  {validationError && (
+                    <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                      <p className="text-sm font-medium text-rose-600">
+                        {validationError}
+                      </p>
+                    </div>
+                  )}
 
-                  <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">Select Doctor / Specialty</label>
-                    <select className="w-full px-3.5 py-3 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-xs sm:text-sm text-stone-800 bg-white min-h-[44px]">
-                      <option>Dr. Mozim Malik (Homeopathy - BHMS, CCH)</option>
-                      <option>Dr. Karishma Malik (Ayurveda - BAMS, YIC)</option>
-                      <option>General Consultation / First Visit</option>
-                    </select>
-                  </div>
+                  {/* Success Message */}
+                  {successMessage && (
+                    <div className="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                      <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
 
-                  <button
-                    type="button"
-                    className="w-full mt-2 flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-emerald-700 active:bg-emerald-800 hover:bg-emerald-800 text-white font-bold text-sm shadow-md shadow-emerald-800/20 transition-colors min-h-[48px] cursor-pointer"
-                  >
-                    <Send className="w-4 h-4 text-emerald-200 shrink-0" />
-                    <span>Send Consultation Request</span>
-                  </button>
-                </form>
+                      <p className="text-sm font-medium leading-6 text-emerald-700">
+                        {successMessage}
+                      </p>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Name + Phone */}
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      {/* Full Name */}
+                      <div>
+                        <label
+                          htmlFor="fullName"
+                          className="mb-1.5 block text-sm font-semibold text-stone-700"
+                        >
+                          Full Name
+                        </label>
+
+                        <input
+                          id="fullName"
+                          type="text"
+                          placeholder="Enter your full name"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                        />
+                      </div>
+
+                      {/* Phone */}
+                      <div>
+                        <label
+                          htmlFor="phone"
+                          className="mb-1.5 block text-sm font-semibold text-stone-700"
+                        >
+                          Phone Number
+                        </label>
+
+                        <input
+                          id="phone"
+                          type="tel"
+                          placeholder="+91 98765 43210"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <label
+                        htmlFor="email"
+                        className="mb-1.5 block text-sm font-semibold text-stone-700"
+                      >
+                        Email
+                      </label>
+
+                      <input
+                        id="email"
+                        type="email"
+                        placeholder="Enter your email address"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                      />
+                    </div>
+
+                    {/* Doctor + Concern */}
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      {/* Doctor */}
+                      <div>
+                        <label
+                          htmlFor="doctor"
+                          className="mb-1.5 block text-sm font-semibold text-stone-700"
+                        >
+                          Select Doctor
+                        </label>
+
+                        <select
+                          id="doctor"
+                          value={doctor}
+                          onChange={(e) => setDoctor(e.target.value)}
+                          className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                        >
+                          <option value="" disabled>
+                            Select a doctor
+                          </option>
+
+                          <option value="mozim">
+                            Dr. Mozim Malik - BHMS, CCH
+                          </option>
+
+                          <option value="karishma">
+                            Dr. Karishma Malik - BAMS, YIC
+                          </option>
+                        </select>
+                      </div>
+
+                      {/* Concern */}
+                      <div>
+                        <label
+                          htmlFor="concern"
+                          className="mb-1.5 block text-sm font-semibold text-stone-700"
+                        >
+                          Select Concern
+                        </label>
+
+                        <select
+                          id="concern"
+                          value={concern}
+                          onChange={(e) => setConcern(e.target.value)}
+                          className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                        >
+                          <option value="" disabled>
+                            Select your concern
+                          </option>
+
+                          <option value="digestive">
+                            Digestive Disorders
+                          </option>
+
+                          <option value="skin-hair">
+                            Skin & Hair Disorders
+                          </option>
+
+                          <option value="joint-muscle">
+                            Joint & Muscle Disorders
+                          </option>
+
+                          <option value="respiratory">
+                            Respiratory Disorders
+                          </option>
+
+                          <option value="stress-anxiety">
+                            Stress & Anxiety
+                          </option>
+
+                          <option value="womens-health">
+                            Women's Health
+                          </option>
+
+                          <option value="urinary-kidney">
+                            Urinary & Kidney Health
+                          </option>
+
+                          <option value="pcod-pcos">PCOD / PCOS</option>
+
+                          <option value="weight-management">
+                            Weight Management
+                          </option>
+
+                          <option value="general-wellness">
+                            General Wellness
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Preferred Date */}
+                    <div>
+                      <label
+                        htmlFor="preferredDate"
+                        className="mb-1.5 block text-sm font-semibold text-stone-700"
+                      >
+                        Preferred Date
+                      </label>
+
+                      <input
+                        id="preferredDate"
+                        type="date"
+                        value={preferredDate}
+                        onChange={(e) => setPreferredDate(e.target.value)}
+                        className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                      />
+                    </div>
+
+                    {/* Message */}
+                    <div>
+                      <label
+                        htmlFor="message"
+                        className="mb-1.5 block text-sm font-semibold text-stone-700"
+                      >
+                        Message
+                      </label>
+
+                      <textarea
+                        id="message"
+                        rows="4"
+                        placeholder="Tell us briefly about your concern..."
+                        value={messageText}
+                        onChange={(e) => setMessageText(e.target.value)}
+                        className="w-full resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                      />
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-emerald-900/20 transition hover:bg-emerald-800 active:bg-emerald-900"
+                    >
+                      <Stethoscope className="h-4 w-4 shrink-0" />
+                      <span>Submit Appointment Request</span>
+                    </button>
+                  </form>
+                </div>
               </div>
-
             </div>
           </div>
         </section>
-
       </main>
 
-      {/* 6. Mobile-First Footer */}
-      <Footer />
+      {/* Cart Drawer */}
+      <CartDrawer />
 
+      {/* Checkout */}
+      <Checkout />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

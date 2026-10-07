@@ -7,6 +7,12 @@
  * any entry without changes.
  * ─────────────────────────────────────────────────────────────────
  */
+import herbalDigestivePoster from '../assets/Herbal Digestive Support Poster.png';
+import jointWellnessPoster from '../assets/Joint Wellness Herbal Formula.png';
+import womensWellnessPoster from '../assets/Women’s Wellness Herbal Formula.png';
+import respiratoryPoster from '../assets/Respiratory Care Drops Wellness Poster.png';
+import skinWellnessPoster from '../assets/Malik’s Polyclinic Skin Wellness Drops.png';
+import stressReliefPoster from '../assets/Stress Relief Support Wellness Poster.png';
 
 export const products = [
   {
@@ -15,7 +21,7 @@ export const products = [
     category: 'Ayurvedic',
     description: 'Herbal formulation designed to support healthy digestion and gut comfort naturally.',
     price: 299,
-    image: null, // Replace with: '/images/herbal-digestive.jpg'
+    image: herbalDigestivePoster,
   },
   {
     id: 2,
@@ -23,7 +29,7 @@ export const products = [
     category: 'Ayurvedic',
     description: 'Traditional herbal support for joint and muscle wellness and everyday mobility.',
     price: 349,
-    image: null, // Replace with: '/images/joint-wellness.jpg'
+    image: jointWellnessPoster,
   },
   {
     id: 3,
@@ -31,7 +37,7 @@ export const products = [
     category: 'Homeopathic',
     description: 'Homeopathic formulation for respiratory wellness and clear breathing support.',
     price: 199,
-    image: null, // Replace with: '/images/respiratory-drops.jpg'
+    image: respiratoryPoster,
   },
   {
     id: 4,
@@ -39,7 +45,7 @@ export const products = [
     category: 'Homeopathic',
     description: 'Homeopathic support for healthy skin clarity and overall skin wellness.',
     price: 249,
-    image: null, // Replace with: '/images/skin-drops.jpg'
+    image: skinWellnessPoster,
   },
   {
     id: 5,
@@ -47,7 +53,7 @@ export const products = [
     category: 'Homeopathic',
     description: 'Homeopathic formulation intended to support relaxation and general wellness.',
     price: 229,
-    image: null, // Replace with: '/images/stress-relief.jpg'
+    image: stressReliefPoster,
   },
   {
     id: 6,
@@ -55,6 +61,6 @@ export const products = [
     category: 'Ayurvedic',
     description: "Herbal wellness support formulated for women's health and hormonal balance.",
     price: 399,
-    image: null, // Replace with: '/images/womens-wellness.jpg'
+    image: womensWellnessPoster,
   },
 ];

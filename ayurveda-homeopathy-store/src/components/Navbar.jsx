@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Leaf, Menu, X, Stethoscope } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeLink, setActiveLink] = useState('Home');
+    const cart = useCart();
+    const cartCount = cart?.totalQuantity || 0;
+    const openCart = cart?.open;
 
     const navLinks = [
         { name: 'Home', href: '#home' },
@@ -82,6 +86,11 @@ const Navbar = () => {
 
                     {/* Desktop Action - Contact Doctor Button */}
                     <div className="hidden md:flex items-center gap-3">
+                        <button aria-label="Open cart" onClick={() => openCart?.()} className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs lg:text-sm font-semibold shadow-md shadow-emerald-800/20 hover:shadow-lg transition-all duration-200">
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 6h15l-1.5 9h-12z" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <span>Cart</span>
+                            {cartCount > 0 && <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">{cartCount}</span>}
+                        </button>
                         <a
                             href="#contact"
                             className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs lg:text-sm font-semibold shadow-md shadow-emerald-800/20 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"

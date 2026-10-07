@@ -1,120 +1,172 @@
-import React from 'react';
-import { ArrowRight, Stethoscope, Sparkles, ShieldCheck, HeartHandshake, Leaf, ImageOff } from 'lucide-react';
+import React from "react";
+import {
+    ArrowRight,
+    Stethoscope,
+    Sparkles,
+    ShieldCheck,
+    HeartHandshake,
+    Leaf,
+} from "lucide-react";
+
+import heroImage from "../assets/Modern Muslim Doctor Couple Hero Banner.png";
 
 const Hero = () => {
     return (
-        <section id="home" className="relative overflow-hidden pt-6 sm:pt-12 pb-16 sm:pb-24 bg-gradient-to-b from-emerald-50/60 via-stone-50 to-white w-full max-w-full">
+        <section
+            id="home"
+            className="relative w-full max-w-full overflow-hidden bg-gradient-to-b from-emerald-50/70 via-stone-50 to-white pt-6 pb-16 sm:pt-12 sm:pb-24"
+        >
+            {/* Decorative Background Glows */}
+            <div className="pointer-events-none absolute right-0 top-0 -z-10 h-72 w-72 rounded-full bg-emerald-200/25 blur-3xl sm:h-96 sm:w-96" />
 
-            {/* Decorative Soft Background Glows */}
-            <div className="absolute top-0 right-0 w-72 h-72 sm:w-96 sm:h-96 bg-emerald-200/25 rounded-full blur-3xl -z-10 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 sm:w-80 sm:h-80 bg-amber-100/30 rounded-full blur-2xl -z-10 pointer-events-none" />
+            <div className="pointer-events-none absolute bottom-0 left-0 -z-10 h-64 w-64 rounded-full bg-amber-100/30 blur-2xl sm:h-80 sm:w-80" />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-12">
 
-                    {/* Left Column: Text & Action Buttons */}
-                    <div className="lg:col-span-7 flex flex-col items-start space-y-4 sm:space-y-6 text-left max-w-full">
+                    {/* =====================================================
+              LEFT SIDE - HERO CONTENT
+          ===================================================== */}
+                    <div className="flex max-w-full flex-col items-start space-y-4 text-left sm:space-y-6 lg:col-span-7">
 
-                        {/* Top Badge */}
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/80 border border-emerald-200/80 text-emerald-850 text-xs sm:text-sm font-semibold tracking-wide shadow-xs max-w-full">
-                            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0 fill-emerald-600/30" />
-                            <span className="truncate">Ayurvedic & Homeopathic Polyclinic</span>
+                        {/* Badge */}
+                        <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-100/80 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-emerald-800 shadow-sm sm:text-sm">
+                            <Sparkles
+                                className="h-3.5 w-3.5 shrink-0 text-emerald-600 sm:h-4 sm:w-4"
+                                fill="currentColor"
+                                fillOpacity={0.25}
+                            />
+
+                            <span className="truncate">
+                                Ayurvedic & Homeopathic Polyclinic
+                            </span>
                         </div>
 
-                        {/* Main Heading - Mobile First Resizing */}
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-stone-900 tracking-tight leading-[1.18] sm:leading-[1.15] break-words">
-                            Malik's{' '}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 via-teal-600 to-emerald-800">
+                        {/* Main Heading */}
+                        <h1 className="break-words text-3xl font-extrabold leading-[1.18] tracking-tight text-stone-900 sm:text-4xl md:text-5xl lg:text-6xl">
+                            Malik's{" "}
+                            <span className="bg-gradient-to-r from-emerald-700 via-teal-600 to-emerald-800 bg-clip-text text-transparent">
                                 Polyclinic
                             </span>
                         </h1>
 
-                        {/* Professional Subheading */}
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-emerald-900 tracking-tight leading-snug">
+                        {/* Subheading */}
+                        <p className="text-lg font-bold leading-snug tracking-tight text-emerald-900 sm:text-xl lg:text-2xl">
                             Natural Care. Better Health. Personalized Treatment.
                         </p>
 
-                        {/* Short Description */}
-                        <p className="text-sm sm:text-base lg:text-lg text-stone-600 leading-relaxed max-w-2xl font-normal">
-                            We provide Homeopathic and Ayurvedic healthcare with a focus on natural, personalized and holistic treatment.
+                        {/* Description */}
+                        <p className="max-w-2xl text-sm font-normal leading-relaxed text-stone-600 sm:text-base lg:text-lg">
+                            We provide Homeopathic and Ayurvedic healthcare with a focus on
+                            natural, personalized and holistic treatment.
                         </p>
 
-                        {/* Action Buttons - Touch Friendly & Full Width on Mobile */}
-                        <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                        {/* Action Buttons */}
+                        <div className="flex w-full flex-col items-stretch gap-3 pt-2 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
+
+                            {/* Explore Medicines */}
                             <a
-                                href="#treatments"
-                                className="flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-emerald-700 active:bg-emerald-800 hover:bg-emerald-800 text-white font-semibold text-base shadow-md shadow-emerald-800/25 transition-all duration-200 min-h-[48px] text-center"
+                                href="#medicines"
+                                className="flex min-h-[48px] items-center justify-center gap-2.5 rounded-2xl bg-emerald-700 px-6 py-3.5 text-center text-base font-semibold text-white shadow-md shadow-emerald-800/25 transition-all duration-200 hover:bg-emerald-800 active:bg-emerald-900 sm:px-8 sm:py-4"
                             >
                                 <span>Explore Medicines</span>
-                                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+
+                                <ArrowRight className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
                             </a>
 
+                            {/* Contact Doctor */}
                             <a
                                 href="#doctors"
-                                className="flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-white hover:bg-emerald-50/60 text-emerald-900 font-semibold text-base border-2 border-emerald-700/25 hover:border-emerald-700/50 shadow-xs transition-all duration-200 min-h-[48px] text-center"
+                                className="flex min-h-[48px] items-center justify-center gap-2.5 rounded-2xl border-2 border-emerald-700/25 bg-white px-6 py-3.5 text-center text-base font-semibold text-emerald-900 shadow-sm transition-all duration-200 hover:border-emerald-700/50 hover:bg-emerald-50/60 sm:px-8 sm:py-4"
                             >
-                                <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-700 shrink-0" />
+                                <Stethoscope className="h-4 w-4 shrink-0 text-emerald-700 sm:h-5 sm:w-5" />
+
                                 <span>Contact Doctor</span>
                             </a>
                         </div>
 
-                        {/* Trust Highlights - Mobile Stack / Grid */}
-                        <div className="pt-6 border-t border-stone-200/80 w-full grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/60 sm:bg-transparent border border-stone-200/50 sm:border-none">
-                                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800 shrink-0">
-                                    <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                        {/* Trust Highlights */}
+                        <div className="grid w-full grid-cols-1 gap-3 border-t border-stone-200/80 pt-6 sm:grid-cols-3 sm:gap-4">
+
+                            {/* Trusted Care */}
+                            <div className="flex items-center gap-3 rounded-xl border border-stone-200/50 bg-white/60 p-2.5 sm:border-none sm:bg-transparent">
+                                <div className="shrink-0 rounded-xl bg-emerald-100 p-2 text-emerald-800">
+                                    <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" />
                                 </div>
+
                                 <div className="text-left">
-                                    <p className="text-xs sm:text-sm font-bold text-stone-900">100% Pure</p>
-                                    <p className="text-[11px] sm:text-xs text-stone-500">Natural Treatments</p>
+                                    <p className="text-xs font-bold text-stone-900 sm:text-sm">
+                                        Trusted Care
+                                    </p>
+
+                                    <p className="text-[11px] text-stone-500 sm:text-xs">
+                                        Professional Healthcare
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/60 sm:bg-transparent border border-stone-200/50 sm:border-none">
-                                <div className="p-2 rounded-xl bg-teal-100 text-teal-800 shrink-0">
-                                    <HeartHandshake className="w-4 h-4 sm:w-5 sm:h-5" />
+                            {/* Qualified Doctors */}
+                            <div className="flex items-center gap-3 rounded-xl border border-stone-200/50 bg-white/60 p-2.5 sm:border-none sm:bg-transparent">
+                                <div className="shrink-0 rounded-xl bg-teal-100 p-2 text-teal-800">
+                                    <HeartHandshake className="h-4 w-4 sm:h-5 sm:w-5" />
                                 </div>
+
                                 <div className="text-left">
-                                    <p className="text-xs sm:text-sm font-bold text-stone-900">Expert Doctors</p>
-                                    <p className="text-[11px] sm:text-xs text-stone-500">BHMS & BAMS</p>
+                                    <p className="text-xs font-bold text-stone-900 sm:text-sm">
+                                        Qualified Doctors
+                                    </p>
+
+                                    <p className="text-[11px] text-stone-500 sm:text-xs">
+                                        BHMS & BAMS
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/60 sm:bg-transparent border border-stone-200/50 sm:border-none">
-                                <div className="p-2 rounded-xl bg-amber-100 text-amber-800 shrink-0">
-                                    <Leaf className="w-4 h-4 sm:w-5 sm:h-5" />
+                            {/* Holistic Care */}
+                            <div className="flex items-center gap-3 rounded-xl border border-stone-200/50 bg-white/60 p-2.5 sm:border-none sm:bg-transparent">
+                                <div className="shrink-0 rounded-xl bg-amber-100 p-2 text-amber-800">
+                                    <Leaf className="h-4 w-4 sm:h-5 sm:w-5" />
                                 </div>
+
                                 <div className="text-left">
-                                    <p className="text-xs sm:text-sm font-bold text-stone-900">Zero Side Effects</p>
-                                    <p className="text-[11px] sm:text-xs text-stone-500">Gentle Healing</p>
+                                    <p className="text-xs font-bold text-stone-900 sm:text-sm">
+                                        Holistic Care
+                                    </p>
+
+                                    <p className="text-[11px] text-stone-500 sm:text-xs">
+                                        Natural Approach
+                                    </p>
                                 </div>
                             </div>
+
                         </div>
-
                     </div>
 
-                    {/* Right Column: Mobile-friendly Responsive Image Container */}
-                    <div className="lg:col-span-5 relative flex justify-center w-full max-w-full mt-4 lg:mt-0">
+                    {/* =====================================================
+              RIGHT SIDE - HERO IMAGE
+          ===================================================== */}
+                    <div className="relative mt-2 flex w-full max-w-full justify-center lg:col-span-5 lg:mt-0">
+
+                        {/* Soft Glow Behind Image */}
+                        <div className="absolute inset-4 rounded-[2rem] bg-gradient-to-tr from-emerald-500/20 via-teal-400/10 to-amber-200/20 blur-2xl" />
+
+                        {/* Image Container */}
                         <div className="relative w-full max-w-md lg:max-w-none">
 
-                            {/* Decorative Frame Glow */}
-                            <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600 to-teal-400 rounded-3xl rotate-1 opacity-20 blur-md pointer-events-none" />
+                            <div className="relative overflow-hidden rounded-3xl border border-emerald-100/80 bg-white/80 p-2 shadow-xl shadow-emerald-900/10 backdrop-blur-sm sm:p-3">
 
-                            {/* Main Container Card */}
-                            <div className="relative rounded-2xl sm:rounded-3xl bg-white p-2.5 sm:p-4 shadow-xl border border-stone-200/80 overflow-hidden">
-                                {/* ── HERO IMAGE PLACEHOLDER ──────────────────────────────
-                                     Upload your real clinic photo to /public/ folder,
-                                     then replace this block with:
-                                     <img src="/your-photo.jpg" alt="..." className="w-full h-full object-cover" />
-                                ────────────────────────────────────────────────────── */}
-                                <div className="relative rounded-xl sm:rounded-2xl overflow-hidden aspect-[4/3] sm:aspect-[14/11] bg-gradient-to-br from-emerald-50 via-stone-100 to-teal-50 border-2 border-dashed border-emerald-300/70 flex flex-col items-center justify-center gap-3 text-center p-6">
-                                    <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center">
-                                        <ImageOff className="w-7 h-7 text-emerald-500" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-stone-600">Clinic Photo</p>
-                                        <p className="text-xs text-stone-400 mt-1">Your image will appear here</p>
-                                    </div>
+                                {/* Doctor Couple Image */}
+                                <div className="relative overflow-hidden rounded-2xl bg-emerald-50">
+
+                                    <img
+                                        src={heroImage}
+                                        alt="Doctors at Malik's Polyclinic"
+                                        className="block h-auto w-full object-cover object-center"
+                                    />
+
+                                    {/* Soft Bottom Gradient */}
+                                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-emerald-950/10 to-transparent" />
+
                                 </div>
 
                             </div>
