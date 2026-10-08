@@ -5,7 +5,7 @@ import { products } from '../data/products';
 
 const FILTERS = ['All', 'Ayurvedic', 'Homeopathic'];
 
-const Products = () => {
+const Products = ({ onViewProduct }) => {
     const [activeFilter, setActiveFilter] = useState('All');
 
     const filtered =
@@ -67,7 +67,11 @@ const Products = () => {
                 {filtered.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
                         {filtered.map((product) => (
-                            <ProductCard key={product.id} product={product} />
+                            <ProductCard
+                                key={product.id}
+                                product={product}
+                                onView={onViewProduct}
+                            />
                         ))}
                     </div>
                 ) : (

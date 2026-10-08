@@ -2,7 +2,7 @@ import React from 'react';
 import { X, Trash } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
-const CartDrawer = () => {
+const CartDrawer = ({ onCheckout }) => {
   const { items, isOpen, close, increase, decrease, removeItem, subtotal, clear, openCheckout } = useCart();
 
   if (!isOpen) return null;
@@ -54,7 +54,7 @@ const CartDrawer = () => {
 
               <div className="mt-4 flex gap-2">
                 <button onClick={clear} className="flex-1 rounded-xl border px-4 py-3 cursor-pointer">Clear Cart</button>
-                <button onClick={() => { close(); openCheckout(); }} className="flex-1 rounded-xl bg-emerald-700 text-white px-4 py-3 text-center cursor-pointer">Proceed to Order</button>
+                <button onClick={() => { close(); onCheckout ? onCheckout() : openCheckout(); }} className="flex-1 rounded-xl bg-emerald-700 text-white px-4 py-3 text-center cursor-pointer">Proceed to Order</button>
               </div>
             </div>
           </div>

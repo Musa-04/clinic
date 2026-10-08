@@ -7,7 +7,7 @@ import { useCart } from '../context/CartContext';
  * Props:
  *   product: { id, name, category, description, price, image }
  */
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, onView }) => {
     const { name, category, description, price, image } = product;
 
     const isAyurvedic = category === 'Ayurvedic';
@@ -82,6 +82,7 @@ const ProductCard = ({ product }) => {
 
                         <button
                             type="button"
+                            onClick={() => onView?.(product)}
                             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-stone-200 bg-white text-stone-700 text-xs sm:text-sm font-semibold transition-all duration-200 min-h-[36px] cursor-pointer"
                         >
                             <Eye className="w-3.5 h-3.5 text-stone-400 shrink-0" />

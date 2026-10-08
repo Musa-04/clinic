@@ -14,6 +14,13 @@ import {
 } from "lucide-react";
 
 import { useCart } from "../context/CartContext";
+import {
+  calculateOrderTotals,
+  generateOrderId,
+  saveOrder,
+} from "../utils/orderStorage";
+
+export const CLINIC_UPI_ID = "YOUR-UPI-ID@upi";
 
 const validateIndianPhone = (num) => {
   const cleaned = num.replace(/[^0-9]/g, "");
@@ -34,13 +41,13 @@ const validateEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
-const Checkout = () => {
+const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
   const {
     checkoutOpen,
     closeCheckout,
+    clear,
     items,
     subtotal,
-    totalQuantity,
     setCustomerDetails,
     setCheckoutPrepared,
   } = useCart();
@@ -83,6 +90,7 @@ const Checkout = () => {
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
 
   // --------------------------------------------------
   // ORDER STATUS
@@ -91,24 +99,19 @@ const Checkout = () => {
   const [orderPlaced, setOrderPlaced] = useState(false);
 
   const [orderNumber, setOrderNumber] = useState("");
+  const [orderError, setOrderError] = useState("");
 
   // --------------------------------------------------
   // UPI ID
   // --------------------------------------------------
   // Replace this later with the clinic's real UPI ID.
-  const CLINIC_UPI_ID = "YOUR-UPI-ID@upi";
-
   // --------------------------------------------------
   // DELIVERY
   // --------------------------------------------------
 
-  const FREE_DELIVERY_LIMIT = 1000;
-
-  const isFreeDelivery = Number(subtotal) >= FREE_DELIVERY_LIMIT;
-
-  const deliveryCharge = isFreeDelivery ? 0 : 0;
-
-  const totalAmount = Number(subtotal) + deliveryCharge;
+  const { subtotal: calculatedSubtotal, shipping, tax, total: totalAmount } =
+    calculateOrderTotals(items);
+  const isFreeDelivery = shipping === 0;
 
   // --------------------------------------------------
   // RESET WHEN CHECKOUT OPENS
@@ -121,6 +124,7 @@ const Checkout = () => {
     setErrors({});
     setOrderPlaced(false);
     setOrderNumber("");
+    setOrderError("");
     setPaymentConfirmed(false);
     setTransactionId("");
     setCopied(false);
@@ -228,12 +232,14 @@ const Checkout = () => {
       await navigator.clipboard.writeText(CLINIC_UPI_ID);
 
       setCopied(true);
+      setCopyError("");
 
       setTimeout(() => {
         setCopied(false);
       }, 2000);
-    } catch (error) {
-      console.error("Unable to copy UPI ID:", error);
+    } catch {
+      setCopied(false);
+      setCopyError("Copy is unavailable. Select the UPI ID to copy it manually.");
     }
   };
 
@@ -242,7 +248,11 @@ const Checkout = () => {
   // --------------------------------------------------
 
   const handlePaymentContinue = () => {
-    if (paymentMethod === "upi" && !paymentConfirmed) {
+    if (
+      paymentMethod !== "upi" ||
+      !paymentConfirmed ||
+      !transactionId.trim()
+    ) {
       return;
     }
 
@@ -259,17 +269,66 @@ const Checkout = () => {
   // --------------------------------------------------
 
   const handlePlaceOrder = () => {
-    if (!items || items.length === 0) {
+    if (!items?.length || !validateDelivery()) {
       return;
     }
 
-    const generatedOrderNumber =
-      "MP" +
-      Date.now().toString().slice(-8);
+    if (paymentMethod !== "upi" || !transactionId.trim() || !paymentConfirmed) {
+      setOrderError("Enter your transaction ID and confirm your UPI payment.");
+      setCurrentStep(2);
+      return;
+    }
 
-    setOrderNumber(generatedOrderNumber);
+    const now = new Date().toISOString();
+    const order = {
+      id: generateOrderId(),
+      createdAt: now,
+      customer: {
+        name: form.fullName.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+      },
+      deliveryAddress: {
+        address: form.address.trim(),
+        city: form.city.trim(),
+        state: form.state.trim(),
+        pincode: form.pincode.trim(),
+        country: form.country,
+      },
+      items: items.map(({ id, name, image, price, quantity }) => ({
+        id,
+        name,
+        image,
+        price: Number(price) || 0,
+        quantity: Number(quantity) || 1,
+      })),
+      subtotal: calculatedSubtotal,
+      shipping,
+      tax,
+      total: totalAmount,
+      payment: {
+        method: "UPI",
+        transactionId: transactionId.trim(),
+        status: "Pending Verification",
+      },
+      orderStatus: "Placed",
+      cancellation: {
+        cancelled: false,
+        reason: "",
+        cancelledAt: null,
+      },
+    };
 
-    setOrderPlaced(true);
+    try {
+      saveOrder(order);
+      setOrderNumber(order.id);
+      setOrderPlaced(true);
+      clear();
+      closeCheckout();
+      onOrderPlaced?.(order);
+    } catch {
+      setOrderError("We could not save your order. Please try again.");
+    }
   };
 
   // --------------------------------------------------
@@ -279,6 +338,7 @@ const Checkout = () => {
   const handleBack = () => {
     if (currentStep === 1) {
       closeCheckout();
+      onClose?.();
       return;
     }
 
@@ -296,19 +356,22 @@ const Checkout = () => {
   if (!items || items.length === 0) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
-          <h2 className="text-2xl font-bold text-stone-900">
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-neutral-900 p-8 text-center shadow-2xl">
+          <h2 className="text-2xl font-bold text-white">
             Your cart is empty
           </h2>
 
-          <p className="mt-2 text-sm text-stone-500">
+          <p className="mt-2 text-sm text-stone-400">
             Add a product to your cart before proceeding to checkout.
           </p>
 
           <button
             type="button"
-            onClick={closeCheckout}
-            className="mt-6 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-800"
+            onClick={() => {
+              closeCheckout();
+              onClose?.();
+            }}
+            className="mt-6 min-h-12 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
           >
             Back to Products
           </button>
@@ -325,20 +388,20 @@ const Checkout = () => {
     return (
       <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4 sm:p-8">
         <div className="mx-auto flex min-h-full max-w-2xl items-center justify-center">
-          <div className="w-full rounded-3xl bg-white p-8 text-center shadow-2xl sm:p-12">
+          <div className="w-full rounded-3xl border border-white/10 bg-neutral-900 p-8 text-center shadow-2xl sm:p-12">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
               <CheckCircle2 className="h-10 w-10 text-emerald-700" />
             </div>
 
-            <h1 className="mt-6 text-3xl font-extrabold text-stone-900">
+            <h1 className="mt-6 text-3xl font-extrabold text-white">
               Order Placed Successfully
             </h1>
 
-            <p className="mt-3 text-stone-600">
+            <p className="mt-3 text-stone-300">
               Thank you for ordering from Malik's Polyclinic.
             </p>
 
-            <div className="mx-auto mt-6 max-w-sm rounded-2xl bg-stone-50 p-5">
+            <div className="mx-auto mt-6 max-w-sm rounded-2xl border border-white/10 bg-neutral-950 p-5">
               <p className="text-xs font-semibold uppercase tracking-wider text-stone-500">
                 Order Number
               </p>
@@ -349,11 +412,11 @@ const Checkout = () => {
 
               <div className="mt-4 border-t border-stone-200 pt-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-stone-500">
+                  <span className="text-stone-400">
                     Total
                   </span>
 
-                  <span className="font-bold text-stone-900">
+                  <span className="font-bold text-white">
                     ₹{totalAmount.toLocaleString("en-IN")}
                   </span>
                 </div>
@@ -372,6 +435,16 @@ const Checkout = () => {
             >
               Continue Shopping
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                closeCheckout();
+                onViewOrders?.();
+              }}
+              className="mt-3 rounded-xl border border-stone-300 px-8 py-3.5 text-sm font-bold text-stone-700 transition hover:bg-stone-100"
+            >
+              Order History
+            </button>
           </div>
         </div>
       </div>
@@ -384,7 +457,7 @@ const Checkout = () => {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60">
-      <div className="min-h-full bg-stone-50">
+      <div className="min-h-full bg-neutral-950 text-stone-100 [&_.bg-white]:bg-neutral-900 [&_.bg-stone-50]:bg-neutral-950 [&_.bg-stone-100]:bg-neutral-800 [&_.border-stone-200]:border-white/10 [&_.border-stone-300]:border-white/15 [&_.text-stone-900]:text-white [&_.text-stone-800]:text-stone-100 [&_.text-stone-700]:text-stone-200 [&_.text-stone-600]:text-stone-300 [&_.text-stone-500]:text-stone-400 [&_.text-emerald-700]:text-emerald-300 [&_.bg-emerald-100]:bg-emerald-400/10 [&_input]:bg-neutral-950 [&_textarea]:bg-neutral-950 [&_input]:text-white [&_textarea]:text-white">
         {/* ==================================================
             HEADER
         ================================================== */}
@@ -973,6 +1046,12 @@ const Checkout = () => {
                           </button>
                         </div>
 
+                        {copyError && (
+                          <p role="status" className="mt-2 text-xs text-amber-700">
+                            {copyError}
+                          </p>
+                        )}
+
                         <div className="mt-5 rounded-xl border border-emerald-200 bg-white p-4">
                           <p className="text-sm font-semibold text-stone-800">
                             Pay ₹
@@ -984,6 +1063,17 @@ const Checkout = () => {
                             After completing the payment, enter your
                             transaction ID below and confirm the payment.
                           </p>
+                        </div>
+
+                        <div className="mt-4 grid gap-4 rounded-xl border border-stone-200 bg-white p-4 sm:grid-cols-[9rem_1fr] sm:items-center">
+                          <div className="flex aspect-square w-full max-w-36 items-center justify-center rounded-lg border border-dashed border-stone-300 bg-stone-50 p-3 text-center text-xs font-medium text-stone-500">
+                            QR payment setup pending
+                          </div>
+                          <ol className="list-inside list-decimal space-y-2 text-xs leading-5 text-stone-600">
+                            <li>Open your UPI app and pay the displayed amount.</li>
+                            <li>Use the clinic UPI ID shown above.</li>
+                            <li>Enter the transaction ID from your receipt.</li>
+                          </ol>
                         </div>
 
                         {/* Transaction ID */}
@@ -1042,7 +1132,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="min-h-[50px] rounded-xl border border-stone-300 bg-white px-6 py-3 text-sm font-bold text-stone-700 transition hover:bg-stone-100"
+                      className="min-h-[50px] rounded-xl border border-stone-300 bg-white px-6 py-3 text-sm font-bold text-stone-700 transition hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                     >
                       Back
                     </button>
@@ -1055,7 +1145,7 @@ const Checkout = () => {
                         (!paymentConfirmed ||
                           !transactionId.trim())
                       }
-                      className={`min-h-[50px] rounded-xl px-7 py-3 text-sm font-bold text-white transition ${
+                      className={`min-h-[50px] rounded-xl px-7 py-3 text-sm font-bold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                         paymentMethod === "upi" &&
                         (!paymentConfirmed ||
                           !transactionId.trim())
@@ -1174,6 +1264,9 @@ const Checkout = () => {
                             Transaction ID:{" "}
                             {transactionId || "Not provided"}
                           </p>
+                          <p className="mt-1 text-xs font-semibold text-amber-700">
+                            Payment submitted — verification pending
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1233,11 +1326,17 @@ const Checkout = () => {
 
                   {/* Place Order */}
 
+                  {orderError && (
+                    <p role="alert" className="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                      {orderError}
+                    </p>
+                  )}
+
                   <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="min-h-[52px] rounded-xl border border-stone-300 bg-white px-6 py-3 text-sm font-bold text-stone-700 transition hover:bg-stone-100"
+                      className="min-h-[52px] rounded-xl border border-stone-300 bg-white px-6 py-3 text-sm font-bold text-stone-700 transition hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                     >
                       Back
                     </button>
@@ -1245,10 +1344,10 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={handlePlaceOrder}
-                      className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-emerald-700 px-8 py-3 text-sm font-bold text-white shadow-md transition hover:bg-emerald-800"
+                      className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-emerald-700 px-8 py-3 text-sm font-bold text-white shadow-md transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
                     >
                       <Lock className="h-4 w-4" />
-                      Place Order
+                      Confirm Payment & Place Order
                     </button>
                   </div>
                 </div>

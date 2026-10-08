@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Stethoscope, CheckCircle } from "lucide-react";
 
 import Navbar from "./components/Navbar";
@@ -13,8 +13,63 @@ import Footer from "./components/Footer";
 import Testimonials from "./components/Testimonials";
 import CartDrawer from "./components/CartDrawer";
 import Checkout from "./components/Checkout";
+import ProductDetails from "./pages/ProductDetails";
+import OrderSuccess from "./pages/OrderSuccess";
+import Orders from "./pages/Orders";
+import OrderDetails from "./pages/OrderDetails";
+import AdminOrders from "./admin/AdminOrders";
+import AdminAuthGuard from "./admin/AdminAuthGuard";
+import { useCart } from "./context/CartContext";
+import { products } from "./data/products";
 
 function App() {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const { openCheckout, closeCheckout } = useCart();
+
+  useEffect(() => {
+    const handlePopState = () => setCurrentPath(window.location.pathname);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const isCheckoutRoute = currentPath === "/checkout";
+  useEffect(() => {
+    if (isCheckoutRoute) openCheckout();
+    else closeCheckout();
+  }, [isCheckoutRoute, openCheckout, closeCheckout]);
+
+  const navigate = (path) => {
+    window.history.pushState({}, "", path);
+    setCurrentPath(window.location.pathname);
+
+    const hash = window.location.hash.slice(1);
+    window.requestAnimationFrame(() => {
+      if (hash) {
+        document.getElementById(hash)?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  };
+
+  const productRoute = currentPath.match(/^\/products\/([^/]+)\/?$/);
+  const productId = productRoute ? decodeURIComponent(productRoute[1]) : null;
+  const selectedProduct = productId
+    ? products.find((product) => String(product.id) === productId)
+    : null;
+  const isProductRoute = currentPath.startsWith("/products/");
+  const ordersRoute = currentPath.match(/^\/orders\/([^/]+)\/?$/);
+  const successRoute = currentPath.match(/^\/order-success\/([^/]+)\/?$/);
+  const orderId = ordersRoute
+    ? decodeURIComponent(ordersRoute[1])
+    : successRoute
+      ? decodeURIComponent(successRoute[1])
+      : null;
+  const isOrdersRoute = currentPath === "/orders" || currentPath === "/orders/";
+  const isAdminRoute = /^\/admin(?:\/orders)?\/?$/.test(currentPath);
+
+  const openProduct = (product) => navigate(`/products/${product.id}`);
+
   // Appointment form state
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -74,11 +129,33 @@ function App() {
     setMessageText("");
   };
 
+  if (isAdminRoute) {
+    return (
+      <AdminAuthGuard>
+        <AdminOrders />
+      </AdminAuthGuard>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-stone-50 font-sans text-stone-800 antialiased selection:bg-emerald-200 selection:text-emerald-900">
       {/* Navbar */}
       <Navbar />
 
+      {ordersRoute ? (
+        <OrderDetails orderId={orderId} onNavigate={navigate} />
+      ) : successRoute ? (
+        <OrderSuccess orderId={orderId} onNavigate={navigate} />
+      ) : isOrdersRoute ? (
+        <Orders onNavigate={navigate} />
+      ) : isProductRoute ? (
+        <ProductDetails
+          product={selectedProduct}
+          onBack={() => navigate("/#medicines")}
+          onNavigate={navigate}
+          onNavigateToProduct={(product) => openProduct(product)}
+        />
+      ) : (
       <main className="w-full max-w-full flex-grow">
         {/* Hero */}
         <Hero />
@@ -93,7 +170,7 @@ function App() {
         <About />
 
         {/* Products */}
-        <Products />
+        <Products onViewProduct={openProduct} />
 
         {/* Why Choose Us */}
         <WhyChooseUs />
@@ -416,12 +493,17 @@ function App() {
           </div>
         </section>
       </main>
+      )}
 
       {/* Cart Drawer */}
-      <CartDrawer />
+      <CartDrawer onCheckout={() => navigate("/checkout")} />
 
       {/* Checkout */}
-      <Checkout />
+      <Checkout
+        onOrderPlaced={(order) => navigate(`/order-success/${encodeURIComponent(order.id)}`)}
+        onClose={() => navigate("/#medicines")}
+        onViewOrders={() => navigate("/orders")}
+      />
 
       {/* Footer */}
       <Footer />
