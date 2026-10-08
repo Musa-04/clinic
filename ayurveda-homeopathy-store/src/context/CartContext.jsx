@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { getProducts } from '../utils/productStorage';
 
 const STORAGE_KEY = 'maliks_polyclinic_cart';
 
@@ -33,6 +34,32 @@ export const CartProvider = ({ children }) => {
       console.warn('Failed to load cart from localStorage', e);
       setItems([]);
     }
+  }, []);
+
+  useEffect(() => {
+    const syncCartWithProducts = () => {
+      try {
+        const currentProducts = new Map(
+          getProducts().map((product) => [String(product.id), product]),
+        );
+        setItems((currentItems) => currentItems.flatMap((item) => {
+          const currentProduct = currentProducts.get(String(item.id));
+          return currentProduct
+            ? [{ ...item, ...currentProduct, quantity: item.quantity }]
+            : [];
+        }));
+      } catch (error) {
+        console.warn('Failed to sync cart with the product catalog', error);
+      }
+    };
+
+    syncCartWithProducts();
+    window.addEventListener('storage', syncCartWithProducts);
+    window.addEventListener('maliks-products-updated', syncCartWithProducts);
+    return () => {
+      window.removeEventListener('storage', syncCartWithProducts);
+      window.removeEventListener('maliks-products-updated', syncCartWithProducts);
+    };
   }, []);
 
   // persist

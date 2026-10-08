@@ -12,9 +12,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
-import { products } from "../data/products";
 
-const ProductDetails = ({ product, onBack, onNavigate, onNavigateToProduct }) => {
+const ProductDetails = ({ product, products = [], onBack, onNavigate, onNavigateToProduct }) => {
   const [quantity, setQuantity] = React.useState(1);
   const [showAddedMessage, setShowAddedMessage] = React.useState(false);
   const { addItem, openCheckout } = useCart();

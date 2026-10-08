@@ -14,6 +14,7 @@ import {
 import {
   formatOrderDate,
   getOrderById,
+  normalizePaymentStatus,
   updateOrder,
 } from "../utils/orderStorage";
 
@@ -71,6 +72,22 @@ const OrderDetails = ({ orderId, onNavigate }) => {
   const normalizedStatus = String(order.orderStatus || "PLACED").toUpperCase();
   const cancelled = normalizedStatus === "CANCELLED" || order.cancellation?.cancelled;
   const canCancel = ["PLACED", "PENDING", "CONFIRMED"].includes(normalizedStatus) && !cancelled;
+  const paymentStatus = normalizePaymentStatus(order.payment?.status);
+  const paymentStatusLabel = {
+    PENDING_VERIFICATION: "Pending Verification",
+    VERIFIED: "Verified",
+    FAILED: "Failed",
+  }[paymentStatus] || paymentStatus;
+  const paymentStatusStyle = {
+    PENDING_VERIFICATION: "border-amber-400/20 bg-amber-400/10 text-amber-200",
+    VERIFIED: "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
+    FAILED: "border-rose-400/20 bg-rose-400/10 text-rose-200",
+  }[paymentStatus] || "border-white/10 bg-white/5 text-stone-300";
+  const paymentStatusDescription = {
+    PENDING_VERIFICATION: "Payment submitted — verification pending",
+    VERIFIED: "Payment manually verified by the clinic",
+    FAILED: "Payment marked as failed by the clinic",
+  }[paymentStatus] || "Payment status unavailable";
   const itemCount = (order.items || []).reduce((count, item) => count + Number(item.quantity || 0), 0);
   const statusSteps = cancelled
     ? [
@@ -147,10 +164,14 @@ const OrderDetails = ({ orderId, onNavigate }) => {
               </div>
               <div className="rounded-2xl border border-white/10 bg-neutral-900 p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-stone-500">Payment Status</p>
-                <span className="mt-3 inline-flex rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1.5 text-sm font-semibold text-amber-200">
-                  {order.payment?.status || "Pending Verification"}
+                <span className={`mt-3 inline-flex rounded-full border px-3 py-1.5 text-sm font-semibold ${paymentStatusStyle}`}>
+                  {paymentStatusLabel}
                 </span>
-                <p className="mt-2 text-xs leading-5 text-stone-400">Payment submitted — verification pending</p>
+                <p className="mt-2 text-xs leading-5 text-stone-400">{paymentStatusDescription}</p>
+                {order.payment?.method && <p className="mt-2 text-xs text-stone-300">Method: {order.payment.method}</p>}
+                {order.payment?.transactionId && <p className="mt-1 break-all font-mono text-xs text-stone-400">Transaction ID: {order.payment.transactionId}</p>}
+                {order.payment?.verifiedAt && <p className="mt-1 text-xs text-stone-400">Verified At: {formatOrderDate(order.payment.verifiedAt, { dateStyle: "medium", timeStyle: "short" })}</p>}
+                {order.payment?.failedAt && <p className="mt-1 text-xs text-stone-400">Failed At: {formatOrderDate(order.payment.failedAt, { dateStyle: "medium", timeStyle: "short" })}</p>}
               </div>
             </section>
 

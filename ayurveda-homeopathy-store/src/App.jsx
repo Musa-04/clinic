@@ -21,10 +21,41 @@ import AdminOrders from "./admin/AdminOrders";
 import AdminAuthGuard from "./admin/AdminAuthGuard";
 import { useCart } from "./context/CartContext";
 import { products } from "./data/products";
+import { getProducts } from "./utils/productStorage";
+import { getProductCategories } from "./utils/adminManagementStorage";
+import { saveAppointment } from "./utils/appointmentStorage";
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [catalogProducts, setCatalogProducts] = useState(products);
+  const [productCategories, setProductCategories] = useState(["Ayurvedic", "Homeopathic"]);
+  const [catalogError, setCatalogError] = useState("");
   const { openCheckout, closeCheckout } = useCart();
+
+  useEffect(() => {
+    const refreshCatalog = () => {
+      try {
+        setCatalogProducts(getProducts());
+        setProductCategories(getProductCategories());
+        setCatalogError("");
+      } catch {
+        setCatalogProducts([]);
+        setCatalogError("The product catalog could not be loaded from browser storage.");
+      }
+    };
+    refreshCatalog();
+    const handleStorage = (event) => {
+      if (event.key === null || event.key === "maliks_products" || event.key === "maliks_product_categories") refreshCatalog();
+    };
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("maliks-products-updated", refreshCatalog);
+    window.addEventListener("maliks-categories-updated", refreshCatalog);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("maliks-products-updated", refreshCatalog);
+      window.removeEventListener("maliks-categories-updated", refreshCatalog);
+    };
+  }, []);
 
   useEffect(() => {
     const handlePopState = () => setCurrentPath(window.location.pathname);
@@ -55,7 +86,7 @@ function App() {
   const productRoute = currentPath.match(/^\/products\/([^/]+)\/?$/);
   const productId = productRoute ? decodeURIComponent(productRoute[1]) : null;
   const selectedProduct = productId
-    ? products.find((product) => String(product.id) === productId)
+    ? catalogProducts.find((product) => String(product.id) === productId)
     : null;
   const isProductRoute = currentPath.startsWith("/products/");
   const ordersRoute = currentPath.match(/^\/orders\/([^/]+)\/?$/);
@@ -66,7 +97,9 @@ function App() {
       ? decodeURIComponent(successRoute[1])
       : null;
   const isOrdersRoute = currentPath === "/orders" || currentPath === "/orders/";
-  const isAdminRoute = /^\/admin(?:\/orders)?\/?$/.test(currentPath);
+  const adminRoute = currentPath.match(/^\/admin(?:\/(dashboard|orders|products|categories|customers|analytics|reviews|coupons|settings))?\/?$/);
+  const adminSection = adminRoute?.[1] || "orders";
+  const isAdminRoute = Boolean(adminRoute);
 
   const openProduct = (product) => navigate(`/products/${product.id}`);
 
@@ -114,7 +147,21 @@ function App() {
       return;
     }
 
-    // Local appointment submission
+    try {
+      saveAppointment({
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        doctor: e.currentTarget.elements.doctor.selectedOptions[0]?.textContent || doctor,
+        concern: e.currentTarget.elements.concern.selectedOptions[0]?.textContent || concern,
+        preferredDate,
+        message: messageText.trim(),
+      });
+    } catch {
+      setValidationError("Your appointment request could not be saved. Please check browser storage and try again.");
+      return;
+    }
+
     setSuccessMessage(
       "Your appointment request has been submitted successfully. Our clinic team will contact you soon."
     );
@@ -132,7 +179,7 @@ function App() {
   if (isAdminRoute) {
     return (
       <AdminAuthGuard>
-        <AdminOrders />
+        <AdminOrders onNavigate={navigate} section={adminSection} />
       </AdminAuthGuard>
     );
   }
@@ -151,6 +198,7 @@ function App() {
       ) : isProductRoute ? (
         <ProductDetails
           product={selectedProduct}
+          products={catalogProducts}
           onBack={() => navigate("/#medicines")}
           onNavigate={navigate}
           onNavigateToProduct={(product) => openProduct(product)}
@@ -160,17 +208,17 @@ function App() {
         {/* Hero */}
         <Hero />
 
-        {/* What We Treat */}
-        <WhatWeTreat />
-
         {/* Doctors */}
         <Doctors />
 
         {/* About */}
         <About />
 
+        {/* Treatments & Wellness Services */}
+        <WhatWeTreat />
+
         {/* Products */}
-        <Products onViewProduct={openProduct} />
+        <Products products={catalogProducts} productCategories={productCategories} catalogError={catalogError} onViewProduct={openProduct} />
 
         {/* Why Choose Us */}
         <WhyChooseUs />
@@ -363,6 +411,7 @@ function App() {
 
                         <select
                           id="doctor"
+                          name="doctor"
                           value={doctor}
                           onChange={(e) => setDoctor(e.target.value)}
                           className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
@@ -392,6 +441,7 @@ function App() {
 
                         <select
                           id="concern"
+                          name="concern"
                           value={concern}
                           onChange={(e) => setConcern(e.target.value)}
                           className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"

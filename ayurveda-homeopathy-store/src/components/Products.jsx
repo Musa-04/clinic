@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShoppingBag, Leaf, FlaskConical, LayoutGrid } from 'lucide-react';
 import ProductCard from './ProductCard';
-import { products } from '../data/products';
 
-const FILTERS = ['All', 'Ayurvedic', 'Homeopathic'];
-
-const Products = ({ onViewProduct }) => {
+const Products = ({ products, productCategories = [], catalogError, onViewProduct }) => {
     const [activeFilter, setActiveFilter] = useState('All');
+    const filters = ['All', ...new Set(
+        (productCategories.length ? productCategories : products.map((product) => product.category))
+            .filter(Boolean),
+    )];
+
+    useEffect(() => {
+        if (!filters.includes(activeFilter)) setActiveFilter('All');
+    }, [activeFilter, filters.join('|')]);
 
     const filtered =
         activeFilter === 'All'
@@ -37,8 +42,9 @@ const Products = ({ onViewProduct }) => {
                 </div>
 
                 {/* Filter Tabs */}
+                {catalogError && <p role="alert" className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{catalogError}</p>}
                 <div className="flex items-center justify-center gap-2 sm:gap-3 mb-8 sm:mb-10 flex-wrap">
-                    {FILTERS.map((filter) => {
+                    {filters.map((filter) => {
                         const Icon =
                             filter === 'Ayurvedic'
                                 ? Leaf

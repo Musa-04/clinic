@@ -1,10 +1,140 @@
 export const ORDERS_STORAGE_KEY = "maliks_orders";
 const ORDER_SEQUENCE_KEY = "maliks_order_sequence";
 
+const ORDER_STATUS_SEQUENCE = ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"];
+const LEGACY_STATUS_MAP = {
+  PLACED: "PENDING",
+  PENDING: "PENDING",
+  CONFIRMED: "CONFIRMED",
+  SHIPPED: "SHIPPED",
+  DELIVERED: "DELIVERED",
+  CANCELLED: "CANCELLED",
+};
+
+const normalizeStatusValue = (value) => {
+  const normalized = String(value ?? "PENDING").trim().toUpperCase();
+  return LEGACY_STATUS_MAP[normalized] || "PENDING";
+};
+
+export const normalizePaymentStatus = (value) => {
+  const normalized = String(value ?? "PENDING VERIFICATION").trim();
+  const upper = normalized.toUpperCase();
+  if (upper === "VERIFIED" || upper === "PAID") return "VERIFIED";
+  if (upper === "FAILED" || upper === "DECLINED") return "FAILED";
+  if (upper === "PENDING" || upper === "PENDING_VERIFICATION" || upper === "PENDING VERIFICATION" || upper === "SUBMITTED") return "PENDING_VERIFICATION";
+  return normalized || "PENDING VERIFICATION";
+};
+
 const notifyOrderChange = () => {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("maliks-orders-updated"));
   }
+};
+
+export const canonicalizeOrder = (order) => {
+  if (!order || typeof order !== "object") return order;
+
+  const orderStatus = normalizeStatusValue(order.orderStatus);
+  const items = Array.isArray(order.items)
+    ? order.items.map((item) => ({
+        ...item,
+        productId: item.productId ?? item.id ?? null,
+        name: item.name ?? "Product",
+        quantity: Number(item.quantity || 0) || 1,
+        price: Number(item.price || 0),
+        subtotal: Number(item.subtotal ?? Number(item.price || 0) * Number(item.quantity || 0)),
+      }))
+    : [];
+
+  const subtotal = Number(order.subtotal || items.reduce((sum, item) => sum + Number(item.subtotal || 0), 0) || 0);
+  const shipping = Number(order.shipping || 0);
+  const tax = Number(order.tax || 0);
+  const discount = Number(order.discount || 0);
+  const total = Number(order.total ?? subtotal + shipping + tax - discount);
+
+  const baseHistory = Array.isArray(order.statusHistory)
+    ? order.statusHistory.map((entry) => ({
+        ...entry,
+        status: normalizeStatusValue(entry?.status || entry?.orderStatus || orderStatus),
+        at: entry?.at || entry?.createdAt || order.createdAt || new Date().toISOString(),
+      }))
+    : [];
+  const hasCurrentStatus = baseHistory.some((entry) => normalizeStatusValue(entry.status) === orderStatus);
+  const statusHistory = hasCurrentStatus
+    ? baseHistory
+    : [
+        ...baseHistory,
+        { status: orderStatus, at: order.createdAt || new Date().toISOString() },
+      ];
+
+  const cancellation = {
+    cancelled: Boolean(order.cancellation?.cancelled || orderStatus === "CANCELLED"),
+    reason: order.cancellation?.reason || "",
+    cancelledAt: order.cancellation?.cancelledAt || null,
+  };
+
+  return {
+    ...order,
+    id: order.id,
+    createdAt: order.createdAt || new Date().toISOString(),
+    customer: {
+      name: order.customer?.name || "",
+      phone: order.customer?.phone || "",
+      email: order.customer?.email || "",
+    },
+    deliveryAddress: {
+      address: order.deliveryAddress?.address || "",
+      city: order.deliveryAddress?.city || "",
+      state: order.deliveryAddress?.state || "",
+      pincode: order.deliveryAddress?.pincode || "",
+      country: order.deliveryAddress?.country || "India",
+    },
+    items,
+    subtotal,
+    shipping,
+    tax,
+    discount,
+    total,
+    payment: {
+      ...(order.payment || {}),
+      method: order.payment?.method || "",
+      status: normalizePaymentStatus(order.payment?.status),
+      transactionId: order.payment?.transactionId || "",
+    },
+    orderStatus,
+    statusHistory,
+    cancellation,
+  };
+};
+
+export const applyOrderStatus = (order, nextStatus, extraUpdates = {}, changedAt = new Date().toISOString()) => {
+  const baseOrder = canonicalizeOrder(order);
+  const normalizedNextStatus = normalizeStatusValue(nextStatus);
+  const history = Array.isArray(baseOrder.statusHistory) ? [...baseOrder.statusHistory] : [];
+
+  if (!history.some((entry) => normalizeStatusValue(entry.status) === normalizedNextStatus)) {
+    history.push({ status: normalizedNextStatus, at: changedAt });
+  }
+
+  const cancellation = {
+    ...(baseOrder.cancellation || {}),
+    ...(extraUpdates.cancellation || {}),
+  };
+
+  if (normalizedNextStatus === "CANCELLED") {
+    cancellation.cancelled = true;
+    cancellation.cancelledAt = cancellation.cancelledAt || changedAt;
+  } else if (cancellation.cancelled && normalizedNextStatus !== "CANCELLED") {
+    cancellation.cancelled = false;
+  }
+
+  return canonicalizeOrder({
+    ...baseOrder,
+    ...extraUpdates,
+    orderStatus: normalizedNextStatus,
+    statusHistory: history,
+    cancellation,
+  });
 };
 
 export const getOrdersStrict = () => {
@@ -14,7 +144,7 @@ export const getOrdersStrict = () => {
   if (!Array.isArray(savedOrders)) {
     throw new Error("Stored orders must be an array.");
   }
-  return savedOrders;
+  return savedOrders.map(canonicalizeOrder);
 };
 
 export const getOrders = () => {
@@ -75,17 +205,18 @@ export const calculateOrderTotals = (items = []) => {
 };
 
 export const saveOrder = (order) => {
+  const normalizedOrder = canonicalizeOrder(order);
   const orders = getOrders();
-  if (orders.some((savedOrder) => savedOrder.id === order.id)) {
+  if (orders.some((savedOrder) => savedOrder.id === normalizedOrder.id)) {
     throw new Error("This order ID already exists.");
   }
 
   window.localStorage.setItem(
     ORDERS_STORAGE_KEY,
-    JSON.stringify([order, ...orders]),
+    JSON.stringify([normalizedOrder, ...orders]),
   );
   notifyOrderChange();
-  return order;
+  return normalizedOrder;
 };
 
 export const updateOrder = (orderId, updates) => {
@@ -93,7 +224,7 @@ export const updateOrder = (orderId, updates) => {
   const index = orders.findIndex((order) => order.id === orderId);
   if (index === -1) return null;
 
-  const updatedOrder = { ...orders[index], ...updates };
+  const updatedOrder = canonicalizeOrder({ ...orders[index], ...updates });
   orders[index] = updatedOrder;
   window.localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
   notifyOrderChange();
@@ -111,9 +242,21 @@ export const updateOrderStrict = (orderId, updates) => {
   const index = orders.findIndex((order) => order.id === orderId);
   if (index === -1) return null;
 
-  const updatedOrder = { ...orders[index], ...updates };
+  const updatedOrder = canonicalizeOrder({ ...orders[index], ...updates });
   orders[index] = updatedOrder;
   window.localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
   notifyOrderChange();
   return updatedOrder;
+};
+
+export const getStatusOrderIndex = (status) => {
+  const normalized = normalizeStatusValue(status);
+  return ORDER_STATUS_SEQUENCE.indexOf(normalized);
+};
+
+export const isValidStatusTransition = (currentStatus, nextStatus) => {
+  const currentIndex = getStatusOrderIndex(currentStatus);
+  const nextIndex = getStatusOrderIndex(nextStatus);
+  if (currentIndex === -1 || nextIndex === -1) return false;
+  return nextIndex > currentIndex;
 };

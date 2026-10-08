@@ -1,6 +1,7 @@
 import {
   getOrderByIdStrict as readOrderById,
   getOrdersStrict as readOrders,
+  normalizePaymentStatus,
   updateOrderStrict as updateOrder,
 } from "../utils/orderStorage";
 
@@ -40,6 +41,37 @@ const getOrderOrThrow = (orderId) => {
   const order = readOrderById(orderId);
   if (!order) throw new Error("Order not found.");
   return order;
+};
+
+const paymentForTransition = (order, expectedStatus) => {
+  const payment = order.payment || {};
+  if (normalizePaymentStatus(payment.status) !== expectedStatus) {
+    throw new Error(`Payment cannot be updated because its status is ${normalizePaymentStatus(payment.status).toLowerCase()}.`);
+  }
+  return payment;
+};
+
+const persistPaymentStatus = (orderId, nextStatus, metadataKey, adminIdentity, requireTransaction = false) => {
+  const order = getOrderOrThrow(orderId);
+  const payment = paymentForTransition(order, "PENDING_VERIFICATION");
+  if (requireTransaction && !String(payment.method || "").trim()) {
+    throw new Error("Cannot verify payment because the payment method is missing.");
+  }
+  if (requireTransaction && !String(payment.transactionId || "").trim()) {
+    throw new Error("Cannot verify payment because the transaction ID is missing.");
+  }
+  const changedAt = new Date().toISOString();
+  const metadata = {
+    ...payment,
+    status: nextStatus,
+    [metadataKey]: changedAt,
+  };
+
+  if (adminIdentity) {
+    metadata[metadataKey === "verifiedAt" ? "verifiedBy" : "failedBy"] = adminIdentity;
+  }
+
+  return persistOrder(orderId, { payment: metadata });
 };
 
 const persistOrder = (orderId, updates) => {
@@ -118,6 +150,14 @@ const localOrderAdapter = {
         cancelledAt,
       },
     }, cancelledAt);
+  },
+
+  async verifyPayment(orderId, adminIdentity) {
+    return persistPaymentStatus(orderId, "VERIFIED", "verifiedAt", adminIdentity, true);
+  },
+
+  async failPayment(orderId, adminIdentity) {
+    return persistPaymentStatus(orderId, "FAILED", "failedAt", adminIdentity);
   },
 };
 
