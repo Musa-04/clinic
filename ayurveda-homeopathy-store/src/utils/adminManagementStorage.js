@@ -141,6 +141,29 @@ export const deleteProductCategory = (categoryId) => {
   return nextCategories.map(({ name }) => name);
 };
 
+export const getActiveCouponByCode = (code) => {
+  const normalized = String(code || "").trim().toUpperCase();
+  if (!normalized) return null;
+  const coupon = getCoupons().find((entry) => entry.code.toUpperCase() === normalized);
+  if (!coupon?.active) return null;
+  if (coupon.expiresOn) {
+    const now = new Date();
+    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const expiry = Date.parse(`${coupon.expiresOn}T00:00:00.000Z`);
+    if (Number.isFinite(expiry) && expiry < today) return null;
+  }
+  return coupon;
+};
+
+export const calculateCouponDiscount = (subtotal, coupon) => {
+  if (!coupon) return 0;
+  const amount = Number(subtotal) || 0;
+  if (coupon.discountType === "percent") {
+    return Math.min(amount, (amount * Number(coupon.value)) / 100);
+  }
+  return Math.min(amount, Number(coupon.value) || 0);
+};
+
 export const getCoupons = () => {
   const coupons = readArray(COUPONS_STORAGE_KEY, "coupons") || [];
   if (coupons.some((coupon) => !coupon || typeof coupon !== "object"
@@ -191,6 +214,9 @@ export const addCoupon = (coupon) => {
   ensureUniqueCouponCode(coupons, normalized.code);
   const nextCoupons = [...coupons, { id: makeId("coupon"), ...normalized }];
   write(COUPONS_STORAGE_KEY, nextCoupons, "Coupon");
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("maliks-coupons-updated"));
+  }
   return nextCoupons;
 };
 
@@ -203,6 +229,9 @@ export const updateCoupon = (couponId, updates) => {
   const nextCoupons = [...coupons];
   nextCoupons[index] = { ...coupons[index], ...normalized };
   write(COUPONS_STORAGE_KEY, nextCoupons, "Coupon");
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("maliks-coupons-updated"));
+  }
   return nextCoupons;
 };
 
@@ -211,6 +240,9 @@ export const deleteCoupon = (couponId) => {
   const nextCoupons = coupons.filter((coupon) => String(coupon.id) !== String(couponId));
   if (nextCoupons.length === coupons.length) throw new Error("Coupon not found.");
   write(COUPONS_STORAGE_KEY, nextCoupons, "Coupon");
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("maliks-coupons-updated"));
+  }
   return nextCoupons;
 };
 
@@ -251,7 +283,11 @@ export const saveClinicSettings = (settings) => {
     throw new Error("Enter a valid support email address.");
   }
   const nextSettings = { clinicName, supportPhone, supportEmail, orderShippingFee };
-  return write(CLINIC_SETTINGS_STORAGE_KEY, nextSettings, "Clinic settings");
+  const saved = write(CLINIC_SETTINGS_STORAGE_KEY, nextSettings, "Clinic settings");
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("maliks-settings-updated"));
+  }
+  return saved;
 };
 
 export { addProductCategory as addCategory };

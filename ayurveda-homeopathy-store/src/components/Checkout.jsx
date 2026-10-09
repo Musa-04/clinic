@@ -19,6 +19,11 @@ import {
   generateOrderId,
   saveOrder,
 } from "../utils/orderStorage";
+import {
+  calculateCouponDiscount,
+  getActiveCouponByCode,
+  getClinicSettings,
+} from "../utils/adminManagementStorage";
 
 export const CLINIC_UPI_ID = "YOUR-UPI-ID@upi";
 
@@ -100,6 +105,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
   const [orderNumber, setOrderNumber] = useState("");
   const [orderError, setOrderError] = useState("");
+  const [shippingFee, setShippingFee] = useState(0);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
 
   // --------------------------------------------------
   // UPI ID
@@ -109,13 +118,38 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
   // DELIVERY
   // --------------------------------------------------
 
-  const { subtotal: calculatedSubtotal, shipping, tax, total: totalAmount } =
-    calculateOrderTotals(items);
+  const itemSubtotal = items.reduce(
+    (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
+    0,
+  );
+  const discount = calculateCouponDiscount(itemSubtotal, appliedCoupon);
+  const { subtotal: calculatedSubtotal, shipping, tax, discount: orderDiscount, total: totalAmount } =
+    calculateOrderTotals(items, { shipping: shippingFee, discount });
   const isFreeDelivery = shipping === 0;
 
   // --------------------------------------------------
   // RESET WHEN CHECKOUT OPENS
   // --------------------------------------------------
+
+  useEffect(() => {
+    const readShippingFee = () => {
+      try {
+        setShippingFee(Number(getClinicSettings().orderShippingFee) || 0);
+      } catch {
+        setShippingFee(0);
+      }
+    };
+    readShippingFee();
+    const onStorage = (event) => {
+      if (event.key === null || event.key === "maliks_clinic_settings") readShippingFee();
+    };
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("maliks-settings-updated", readShippingFee);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("maliks-settings-updated", readShippingFee);
+    };
+  }, []);
 
   useEffect(() => {
     if (!checkoutOpen) return;
@@ -128,6 +162,9 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
     setPaymentConfirmed(false);
     setTransactionId("");
     setCopied(false);
+    setCouponInput("");
+    setAppliedCoupon(null);
+    setCouponError("");
 
     setTimeout(() => {
       document.getElementById("checkout-fullName")?.focus();
@@ -148,6 +185,23 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
       ...previous,
       [field]: "",
     }));
+  };
+
+  const handleApplyCoupon = () => {
+    setCouponError("");
+    try {
+      const coupon = getActiveCouponByCode(couponInput);
+      if (!coupon) {
+        setAppliedCoupon(null);
+        setCouponError("Enter a valid, active coupon code.");
+        return;
+      }
+      setAppliedCoupon(coupon);
+      setCouponInput(coupon.code);
+    } catch {
+      setAppliedCoupon(null);
+      setCouponError("Coupons could not be loaded from browser storage.");
+    }
   };
 
   // --------------------------------------------------
@@ -295,23 +349,28 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
         pincode: form.pincode.trim(),
         country: form.country,
       },
+      notes: form.message.trim(),
+      couponCode: appliedCoupon?.code || "",
       items: items.map(({ id, name, image, price, quantity }) => ({
         id,
+        productId: id,
         name,
         image,
         price: Number(price) || 0,
         quantity: Number(quantity) || 1,
+        subtotal: (Number(price) || 0) * (Number(quantity) || 1),
       })),
       subtotal: calculatedSubtotal,
       shipping,
       tax,
+      discount: orderDiscount,
       total: totalAmount,
       payment: {
         method: "UPI",
         transactionId: transactionId.trim(),
         status: "Pending Verification",
       },
-      orderStatus: "Placed",
+      orderStatus: "PENDING",
       cancellation: {
         cancelled: false,
         reason: "",
@@ -1423,9 +1482,62 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     </span>
 
                     <span className="font-semibold text-stone-900">
-                      ₹{Number(subtotal).toLocaleString("en-IN")}
+                      ₹{Number(calculatedSubtotal).toLocaleString("en-IN")}
                     </span>
                   </div>
+
+                  <div className="mt-4">
+                    <label htmlFor="checkout-coupon" className="mb-1.5 block text-xs font-semibold text-stone-600">
+                      Coupon code
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        id="checkout-coupon"
+                        type="text"
+                        value={couponInput}
+                        onChange={(event) => {
+                          setCouponInput(event.target.value);
+                          setCouponError("");
+                        }}
+                        placeholder="Enter code"
+                        autoCapitalize="characters"
+                        className="min-h-10 min-w-0 flex-1 rounded-xl border border-stone-300 px-3 text-sm text-stone-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        className="min-h-10 shrink-0 rounded-xl border border-emerald-700 bg-emerald-700 px-3 text-xs font-semibold text-white hover:bg-emerald-800"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {appliedCoupon && (
+                      <p className="mt-2 text-xs font-medium text-emerald-700">
+                        {appliedCoupon.code} applied
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAppliedCoupon(null);
+                            setCouponInput("");
+                            setCouponError("");
+                          }}
+                          className="ml-2 underline"
+                        >
+                          Remove
+                        </button>
+                      </p>
+                    )}
+                    {couponError && <p className="mt-2 text-xs text-rose-600">{couponError}</p>}
+                  </div>
+
+                  {orderDiscount > 0 && (
+                    <div className="mt-3 flex items-center justify-between text-sm">
+                      <span className="text-stone-600">Discount</span>
+                      <span className="font-semibold text-emerald-700">
+                        −₹{Number(orderDiscount).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Tax */}
 
@@ -1435,7 +1547,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     </span>
 
                     <span className="font-semibold text-stone-900">
-                      ₹0
+                      ₹{Number(tax).toLocaleString("en-IN")}
                     </span>
                   </div>
 
@@ -1446,8 +1558,8 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                       Shipping
                     </span>
 
-                    <span className="font-bold text-emerald-600">
-                      FREE
+                    <span className={`font-bold ${isFreeDelivery ? "text-emerald-600" : "text-stone-900"}`}>
+                      {isFreeDelivery ? "FREE" : `₹${Number(shipping).toLocaleString("en-IN")}`}
                     </span>
                   </div>
 
@@ -1460,7 +1572,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                       <p className="text-xs font-semibold leading-5 text-stone-600">
                         {isFreeDelivery
                           ? "Your order is eligible for FREE delivery."
-                          : "Standard delivery is currently free."}
+                          : "Standard shipping is included in your order total."}
                       </p>
                     </div>
                   </div>

@@ -80,7 +80,15 @@ const AdminManagement = ({ section = "categories", onNavigate, onOpenNav }) => {
       ].includes(event.key)) refresh();
     };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("maliks-categories-updated", refresh);
+    window.addEventListener("maliks-coupons-updated", refresh);
+    window.addEventListener("maliks-settings-updated", refresh);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("maliks-categories-updated", refresh);
+      window.removeEventListener("maliks-coupons-updated", refresh);
+      window.removeEventListener("maliks-settings-updated", refresh);
+    };
   }, []);
 
   const clearMessages = () => {

@@ -89,6 +89,8 @@ export const canonicalizeOrder = (order) => {
       pincode: order.deliveryAddress?.pincode || "",
       country: order.deliveryAddress?.country || "India",
     },
+    notes: String(order.notes || order.customerNotes || order.message || "").trim(),
+    couponCode: String(order.couponCode || "").trim().toUpperCase(),
     items,
     subtotal,
     shipping,
@@ -192,16 +194,23 @@ export const generateOrderId = (orders = getOrders(), date = new Date()) => {
   return `${prefix}${String(nextSequence).padStart(4, "0")}`;
 };
 
-export const calculateOrderTotals = (items = []) => {
+export const calculateOrderTotals = (items = [], extras = {}) => {
   const subtotal = items.reduce(
     (sum, item) =>
       sum + Number(item.price || 0) * Number(item.quantity || 0),
     0,
   );
-  const shipping = 0;
-  const tax = 0;
+  const shipping = Number.isFinite(Number(extras.shipping)) ? Number(extras.shipping) : 0;
+  const tax = Number.isFinite(Number(extras.tax)) ? Number(extras.tax) : 0;
+  const discount = Number.isFinite(Number(extras.discount)) ? Math.max(0, Number(extras.discount)) : 0;
 
-  return { subtotal, shipping, tax, total: subtotal + shipping + tax };
+  return {
+    subtotal,
+    shipping,
+    tax,
+    discount,
+    total: Math.max(0, subtotal + shipping + tax - discount),
+  };
 };
 
 export const saveOrder = (order) => {
