@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Leaf, Menu, ShoppingCart, X, Stethoscope } from 'lucide-react';
+import { Leaf, Menu, ShoppingCart, X, Stethoscope, ShieldCheck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
@@ -84,10 +84,18 @@ const Navbar = () => {
                         ))}
                     </nav>
 
-                    {/* Desktop Action - Contact Doctor Button */}
-                    <div className="hidden xl:flex items-center gap-3">
+                    {/* Desktop Action Buttons */}
+                    <div className="hidden xl:flex items-center gap-2.5">
+                        <a
+                            href="/admin/login"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-stone-700 hover:text-emerald-800 hover:bg-stone-200/60 text-xs lg:text-sm font-semibold transition-all duration-200"
+                        >
+                            <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                            <span>Admin</span>
+                        </a>
+
                         <button aria-label="Open cart" onClick={() => openCart?.()} className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs lg:text-sm font-semibold shadow-md shadow-emerald-800/20 hover:shadow-lg transition-all duration-200">
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 6h15l-1.5 9h-12z" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 6h15l-1.5 9h-12z" strokeLinecap="round" strokeLinejoin="round" /></svg>
                             <span>Cart</span>
                             {cartCount > 0 && <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">{cartCount}</span>}
                         </button>
@@ -137,36 +145,46 @@ const Navbar = () => {
                 aria-hidden={!isMobileMenuOpen}
                 className={`xl:hidden overflow-hidden border-b border-emerald-100 bg-white shadow-lg transition-[max-height,opacity] duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-[calc(100dvh-4rem)] opacity-100' : 'pointer-events-none max-h-0 opacity-0'}`}
             >
-                    <nav className="max-h-[calc(100dvh-4rem)] overflow-y-auto px-3 pt-3 pb-5 text-left sm:px-6" aria-label="Mobile navigation">
-                        <div className="space-y-1">
-                            {navLinks.map((link) => (
-                                <a
-                                    key={link.name}
-                                    href={link.href}
-                                    onClick={() => handleNavClick(link.name)}
-                                    tabIndex={isMobileMenuOpen ? 0 : -1}
-                                    className={`flex min-h-12 items-center rounded-xl px-4 py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 ${activeLink === link.name
-                                        ? 'bg-emerald-50 text-emerald-800 font-bold border-l-4 border-emerald-600'
-                                        : 'text-stone-700 hover:bg-stone-50 hover:text-emerald-700'
-                                        }`}
-                                >
-                                    {link.name}
-                                </a>
-                            ))}
-                        </div>
-
-                        <div className="mt-3 border-t border-stone-100 pt-3">
+                <nav className="max-h-[calc(100dvh-4rem)] overflow-y-auto px-3 pt-3 pb-5 text-left sm:px-6" aria-label="Mobile navigation">
+                    <div className="space-y-1">
+                        {navLinks.map((link) => (
                             <a
-                                href="#contact"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                key={link.name}
+                                href={link.href}
+                                onClick={() => handleNavClick(link.name)}
                                 tabIndex={isMobileMenuOpen ? 0 : -1}
-                                className="flex min-h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-emerald-700 px-6 py-3.5 text-base font-bold text-white shadow-md shadow-emerald-800/20 transition-colors hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+                                className={`flex min-h-12 items-center rounded-xl px-4 py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 ${activeLink === link.name
+                                    ? 'bg-emerald-50 text-emerald-800 font-bold border-l-4 border-emerald-600'
+                                    : 'text-stone-700 hover:bg-stone-50 hover:text-emerald-700'
+                                    }`}
                             >
-                                <Stethoscope className="w-5 h-5 text-emerald-200" />
-                                <span>Contact Doctor</span>
+                                {link.name}
                             </a>
-                        </div>
-                    </nav>
+                        ))}
+                    </div>
+
+                    <div className="mt-3 space-y-2 border-t border-stone-100 pt-3">
+                        <a
+                            href="/admin/login"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            tabIndex={isMobileMenuOpen ? 0 : -1}
+                            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-emerald-600/20 bg-emerald-50/60 px-6 py-3 text-sm font-bold text-emerald-800 transition-colors hover:bg-emerald-100"
+                        >
+                            <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                            <span>Admin Portal Access</span>
+                        </a>
+
+                        <a
+                            href="#contact"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            tabIndex={isMobileMenuOpen ? 0 : -1}
+                            className="flex min-h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-emerald-700 px-6 py-3.5 text-base font-bold text-white shadow-md shadow-emerald-800/20 transition-colors hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+                        >
+                            <Stethoscope className="w-5 h-5 text-emerald-200" />
+                            <span>Contact Doctor</span>
+                        </a>
+                    </div>
+                </nav>
             </div>
         </header>
     );

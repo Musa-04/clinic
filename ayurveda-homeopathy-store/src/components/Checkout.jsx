@@ -25,7 +25,10 @@ import {
   getClinicSettings,
 } from "../utils/adminManagementStorage";
 
-export const CLINIC_UPI_ID = "YOUR-UPI-ID@upi";
+import clinicQrImage from "../assets/clinic-upi-qr.png";
+
+export const CLINIC_UPI_ID = "9148663873@axl";
+export const CLINIC_ACCOUNT_HOLDER = "MOZIM KHAJAKABIR MALIK";
 
 const validateIndianPhone = (num) => {
   const cleaned = num.replace(/[^0-9]/g, "");
@@ -555,11 +558,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
               <div className="flex items-center gap-2">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                    currentStep >= 1
-                      ? "bg-emerald-600 text-white"
-                      : "border border-stone-300 text-stone-500"
-                  }`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${currentStep >= 1
+                    ? "bg-emerald-600 text-white"
+                    : "border border-stone-300 text-stone-500"
+                    }`}
                 >
                   {currentStep > 1 ? (
                     <Check className="h-4 w-4" />
@@ -569,11 +571,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                 </div>
 
                 <span
-                  className={`hidden text-sm font-semibold sm:block ${
-                    currentStep >= 1
-                      ? "text-stone-900"
-                      : "text-stone-500"
-                  }`}
+                  className={`hidden text-sm font-semibold sm:block ${currentStep >= 1
+                    ? "text-stone-900"
+                    : "text-stone-500"
+                    }`}
                 >
                   Delivery Details
                 </span>
@@ -585,11 +586,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
               <div className="flex items-center gap-2">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                    currentStep >= 2
-                      ? "bg-emerald-600 text-white"
-                      : "border border-stone-300 text-stone-500"
-                  }`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${currentStep >= 2
+                    ? "bg-emerald-600 text-white"
+                    : "border border-stone-300 text-stone-500"
+                    }`}
                 >
                   {currentStep > 2 ? (
                     <Check className="h-4 w-4" />
@@ -599,11 +599,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                 </div>
 
                 <span
-                  className={`hidden text-sm font-semibold sm:block ${
-                    currentStep >= 2
-                      ? "text-stone-900"
-                      : "text-stone-500"
-                  }`}
+                  className={`hidden text-sm font-semibold sm:block ${currentStep >= 2
+                    ? "text-stone-900"
+                    : "text-stone-500"
+                    }`}
                 >
                   Payment Details
                 </span>
@@ -615,21 +614,19 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
               <div className="flex items-center gap-2">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                    currentStep >= 3
-                      ? "bg-emerald-600 text-white"
-                      : "border border-stone-300 text-stone-500"
-                  }`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${currentStep >= 3
+                    ? "bg-emerald-600 text-white"
+                    : "border border-stone-300 text-stone-500"
+                    }`}
                 >
                   3
                 </div>
 
                 <span
-                  className={`hidden text-sm font-semibold sm:block ${
-                    currentStep >= 3
-                      ? "text-stone-900"
-                      : "text-stone-500"
-                  }`}
+                  className={`hidden text-sm font-semibold sm:block ${currentStep >= 3
+                    ? "text-stone-900"
+                    : "text-stone-500"
+                    }`}
                 >
                   Review Order
                 </span>
@@ -1040,19 +1037,17 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("upi")}
-                      className={`w-full rounded-2xl border-2 p-5 text-left transition ${
-                        paymentMethod === "upi"
-                          ? "border-emerald-600 bg-emerald-50/40"
-                          : "border-stone-200 bg-white hover:border-stone-300"
-                      }`}
+                      className={`w-full rounded-2xl border-2 p-5 text-left transition ${paymentMethod === "upi"
+                        ? "border-emerald-600 bg-emerald-50/40"
+                        : "border-stone-200 bg-white hover:border-stone-300"
+                        }`}
                     >
                       <div className="flex items-start gap-3">
                         <div
-                          className={`mt-1 flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-                            paymentMethod === "upi"
-                              ? "border-emerald-600"
-                              : "border-stone-400"
-                          }`}
+                          className={`mt-1 flex h-4 w-4 items-center justify-center rounded-full border-2 ${paymentMethod === "upi"
+                            ? "border-emerald-600"
+                            : "border-stone-400"
+                            }`}
                         >
                           {paymentMethod === "upi" && (
                             <div className="h-2 w-2 rounded-full bg-emerald-600" />
@@ -1124,15 +1119,52 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                           </p>
                         </div>
 
-                        <div className="mt-4 grid gap-4 rounded-xl border border-stone-200 bg-white p-4 sm:grid-cols-[9rem_1fr] sm:items-center">
-                          <div className="flex aspect-square w-full max-w-36 items-center justify-center rounded-lg border border-dashed border-stone-300 bg-stone-50 p-3 text-center text-xs font-medium text-stone-500">
-                            QR payment setup pending
+                        <div className="mt-4 grid gap-5 rounded-2xl border border-stone-200 bg-white p-5 sm:grid-cols-[14rem_1fr] sm:items-center">
+                          <div className="flex flex-col items-center justify-center rounded-xl border border-stone-200 bg-stone-50/60 p-3 shadow-xs">
+                            <img
+                              src={clinicQrImage}
+                              alt="Scan PhonePe / GooglePay / Paytm QR Code to pay Malik's Polyclinic"
+                              className="aspect-square w-48 max-w-full rounded-lg border border-stone-200 bg-white p-1 object-contain shadow-sm"
+                            />
+                            <p className="mt-2 text-[11px] font-bold text-stone-700">
+                              Scan with any UPI App
+                            </p>
+                            <p className="text-[10px] text-stone-500">
+                              PhonePe · GPay · Paytm · BHIM · SBI
+                            </p>
                           </div>
-                          <ol className="list-inside list-decimal space-y-2 text-xs leading-5 text-stone-600">
-                            <li>Open your UPI app and pay the displayed amount.</li>
-                            <li>Use the clinic UPI ID shown above.</li>
-                            <li>Enter the transaction ID from your receipt.</li>
-                          </ol>
+
+                          <div className="space-y-3">
+                            <ol className="list-inside list-decimal space-y-2 text-xs leading-5 text-stone-700">
+                              <li>Open any UPI app (PhonePe, Google Pay, Paytm, etc.).</li>
+                              <li>Scan the QR code or enter UPI ID <strong className="font-mono text-emerald-800">{CLINIC_UPI_ID}</strong>.</li>
+                              <li>Pay exact amount: <strong className="text-emerald-800">₹{totalAmount.toLocaleString("en-IN")}</strong>.</li>
+                              <li>Copy the 12-digit UPI Reference / UTR / Transaction ID.</li>
+                            </ol>
+
+                            {/* Important Verification Notice */}
+                            <div className="rounded-xl border border-amber-300/60 bg-amber-50/80 p-3.5 text-xs text-stone-800 shadow-xs">
+                              <div className="flex items-start gap-2.5">
+                                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-800" />
+                                <div className="space-y-1">
+                                  <p className="font-bold text-amber-950 uppercase tracking-wide text-[10.5px]">
+                                    Important: Verify Beneficiary Name
+                                  </p>
+                                  <p className="text-stone-700 text-[11.5px] leading-relaxed">
+                                    We are an independent small healthcare clinic & pharmacy. While paying, your UPI app will display the verified account holder name:
+                                  </p>
+                                  <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-2.5 py-1 font-mono text-xs font-black text-emerald-950 shadow-2xs">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                    <span>{CLINIC_ACCOUNT_HOLDER}</span>
+                                    <span className="text-[10px] font-sans font-normal text-stone-500">(State Bank of India)</span>
+                                  </div>
+                                  <p className="text-[11px] text-stone-600">
+                                    Please verify this name on your UPI screen before confirming the payment.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Transaction ID */}
@@ -1204,13 +1236,12 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                         (!paymentConfirmed ||
                           !transactionId.trim())
                       }
-                      className={`min-h-[50px] rounded-xl px-7 py-3 text-sm font-bold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
-                        paymentMethod === "upi" &&
+                      className={`min-h-[50px] rounded-xl px-7 py-3 text-sm font-bold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${paymentMethod === "upi" &&
                         (!paymentConfirmed ||
                           !transactionId.trim())
-                          ? "cursor-not-allowed bg-stone-300"
-                          : "bg-emerald-700 hover:bg-emerald-800"
-                      }`}
+                        ? "cursor-not-allowed bg-stone-300"
+                        : "bg-emerald-700 hover:bg-emerald-800"
+                        }`}
                     >
                       Review Order
                     </button>

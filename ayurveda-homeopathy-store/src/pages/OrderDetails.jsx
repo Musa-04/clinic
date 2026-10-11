@@ -10,7 +10,11 @@ import {
   Printer,
   Truck,
   X,
+  Star,
+  Sparkles,
+  MessageSquareHeart,
 } from "lucide-react";
+import TaxInvoiceModal from "../components/TaxInvoiceModal";
 import {
   formatOrderDate,
   getOrderById,
@@ -34,6 +38,11 @@ const OrderDetails = ({ orderId, onNavigate }) => {
   const [otherReason, setOtherReason] = useState("");
   const [cancelError, setCancelError] = useState("");
   const [cancelledConfirmation, setCancelledConfirmation] = useState(false);
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [feedbackTags, setFeedbackTags] = useState(["Effective Medicine", "Quick Delivery"]);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   useEffect(() => {
     const refreshOrder = () => setOrder(getOrderById(orderId));
@@ -91,15 +100,15 @@ const OrderDetails = ({ orderId, onNavigate }) => {
   const itemCount = (order.items || []).reduce((count, item) => count + Number(item.quantity || 0), 0);
   const statusSteps = cancelled
     ? [
-        { label: "Placed", description: "Your order was placed.", done: true, Icon: CheckCircle2 },
-        { label: "Cancelled", description: order.cancellation?.reason || "This order was cancelled.", done: true, Icon: X },
-      ]
+      { label: "Placed", description: "Your order was placed.", done: true, Icon: CheckCircle2 },
+      { label: "Cancelled", description: order.cancellation?.reason || "This order was cancelled.", done: true, Icon: X },
+    ]
     : [
-        { label: "Placed", description: "Your order has been placed successfully.", Icon: CheckCircle2 },
-        { label: "Confirmed", description: "Your order has been confirmed and processing has started.", Icon: ClipboardList },
-        { label: "Shipped", description: "Your order is on its way to you.", Icon: Truck },
-        { label: "Delivered", description: "Your order has been delivered.", Icon: PackageCheck },
-      ];
+      { label: "Placed", description: "Your order has been placed successfully.", Icon: CheckCircle2 },
+      { label: "Confirmed", description: "Your order has been confirmed and processing has started.", Icon: ClipboardList },
+      { label: "Shipped", description: "Your order is on its way to you.", Icon: Truck },
+      { label: "Delivered", description: "Your order has been delivered.", Icon: PackageCheck },
+    ];
   const activeStep = {
     PLACED: 0,
     PENDING: 0,
@@ -140,8 +149,8 @@ const OrderDetails = ({ orderId, onNavigate }) => {
             <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Shopping
           </button>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => window.print()} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-stone-200 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
-              <Printer className="h-4 w-4" aria-hidden="true" /> Download Invoice
+            <button type="button" onClick={() => setIsInvoiceOpen(true)} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-stone-200 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+              <Printer className="h-4 w-4 text-emerald-400" aria-hidden="true" /> Tax Invoice (Flipkart Format)
             </button>
             <button type="button" onClick={() => onNavigate("/#medicines")} className="min-h-10 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500">Continue Shopping</button>
           </div>
@@ -174,6 +183,172 @@ const OrderDetails = ({ orderId, onNavigate }) => {
                 {order.payment?.failedAt && <p className="mt-1 text-xs text-stone-400">Failed At: {formatOrderDate(order.payment.failedAt, { dateStyle: "medium", timeStyle: "short" })}</p>}
               </div>
             </section>
+
+            {/* CUSTOMER FEEDBACK SECTION FOR DELIVERED ORDERS */}
+            {normalizedStatus === "DELIVERED" && (
+              <section className="rounded-2xl border border-emerald-500/30 bg-neutral-900 p-5 sm:p-6 shadow-lg shadow-emerald-950/20">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+                    <MessageSquareHeart className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">Order Feedback & Patient Experience</h2>
+                    <p className="text-xs text-stone-400">Your review helps our doctors improve remedies & patient service</p>
+                  </div>
+                </div>
+
+                {order.feedback || feedbackSubmitted ? (
+                  <div className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-4 w-4 ${star <= (order.feedback?.rating || feedbackRating)
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-stone-600"
+                              }`}
+                          />
+                        ))}
+                        <span className="ml-2 font-bold text-amber-300">
+                          {(order.feedback?.rating || feedbackRating)} / 5 Stars
+                        </span>
+                      </div>
+                      <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                        Feedback Recorded
+                      </span>
+                    </div>
+
+                    <p className="mt-3 text-stone-200 italic">
+                      "{order.feedback?.comment || feedbackComment || "Great products and natural wellness support."}"
+                    </p>
+
+                    {Array.isArray(order.feedback?.tags || feedbackTags) && (order.feedback?.tags || feedbackTags).length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {(order.feedback?.tags || feedbackTags).map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-lg border border-white/10 bg-white/5 px-2 py-0.5 text-[10.5px] text-stone-300"
+                          >
+                            ✓ {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-2 text-[10px] text-stone-500">
+                      Submitted on {formatOrderDate(order.feedback?.submittedAt || new Date().toISOString(), { dateStyle: "medium" })}
+                    </p>
+                  </div>
+                ) : (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const feedbackData = {
+                        rating: feedbackRating,
+                        comment: feedbackComment.trim() || "Medicine was effective and well packaged.",
+                        tags: feedbackTags,
+                        submittedAt: new Date().toISOString(),
+                      };
+                      const updated = updateOrder(order.id, { feedback: feedbackData });
+                      if (updated) {
+                        setOrder(updated);
+                        setFeedbackSubmitted(true);
+                      }
+                    }}
+                    className="mt-4 space-y-4"
+                  >
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-300 mb-2">
+                        Rate Your Experience:
+                      </label>
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setFeedbackRating(star)}
+                            className="p-1 transition hover:scale-110 focus:outline-none"
+                          >
+                            <Star
+                              className={`h-6 w-6 ${star <= feedbackRating
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-stone-600 hover:text-amber-400/50"
+                                }`}
+                            />
+                          </button>
+                        ))}
+                        <span className="ml-2 text-xs font-bold text-amber-300">
+                          {feedbackRating === 5
+                            ? "Excellent ⭐⭐⭐⭐⭐"
+                            : feedbackRating === 4
+                              ? "Very Good ⭐⭐⭐⭐"
+                              : feedbackRating === 3
+                                ? "Good ⭐⭐⭐"
+                                : "Could Be Better"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                        Quick Feedback Highlights:
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          "Effective Medicine",
+                          "Quick Delivery",
+                          "Authentic Packaging",
+                          "Helpful Dosage Instructions",
+                          "Value for Money",
+                        ].map((tag) => {
+                          const active = feedbackTags.includes(tag);
+                          return (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => {
+                                setFeedbackTags((prev) =>
+                                  prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                                );
+                              }}
+                              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${active
+                                  ? "border border-emerald-500/50 bg-emerald-500/20 text-emerald-200"
+                                  : "border border-white/10 bg-neutral-950 text-stone-400 hover:text-white"
+                                }`}
+                            >
+                              {active ? "✓ " : "+ "}
+                              {tag}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="feedback-comment" className="block text-xs font-semibold text-stone-300 mb-1.5">
+                        Your Feedback / Remedy Experience:
+                      </label>
+                      <textarea
+                        id="feedback-comment"
+                        rows={3}
+                        value={feedbackComment}
+                        onChange={(e) => setFeedbackComment(e.target.value)}
+                        placeholder="Share your experience regarding the medicines, relief observed, or delivery..."
+                        className="w-full rounded-xl border border-white/10 bg-neutral-950 px-3 py-2 text-xs text-white placeholder:text-stone-500 focus:border-emerald-400 focus:outline-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-500 shadow-md"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>Submit Order Feedback</span>
+                    </button>
+                  </form>
+                )}
+              </section>
+            )}
 
             <section className="rounded-2xl border border-white/10 bg-neutral-900 p-5 sm:p-6">
               <h2 className="text-lg font-bold text-white">Order Timeline</h2>
@@ -309,6 +484,12 @@ const OrderDetails = ({ orderId, onNavigate }) => {
           </section>
         </div>
       )}
+      {/* Tax Invoice Modal (Flipkart / E-Commerce Standard) */}
+      <TaxInvoiceModal
+        order={order}
+        isOpen={isInvoiceOpen}
+        onClose={() => setIsInvoiceOpen(false)}
+      />
     </main>
   );
 };

@@ -120,9 +120,20 @@ const Footer = () => {
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500 text-center sm:text-left">
-                    <p>© {currentYear} Malik's Polyclinic. All rights reserved.</p>
+                <div className="pt-6 sm:pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-stone-500 text-center md:text-left">
+                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+                        <p>© {currentYear} Malik's Polyclinic. All rights reserved.</p>
+                        <span className="hidden sm:inline text-stone-700">•</span>
+                        <p className="text-stone-400 font-medium">
+                            Designed & Developed with <span className="text-rose-500 animate-pulse">♥</span> by <strong className="text-white font-bold tracking-wide">Musa</strong>
+                        </p>
+                    </div>
+
                     <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                        <a href="/admin/login" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors py-1 inline-flex items-center gap-1">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Admin Portal</span>
+                        </a>
                         <a href="#" className="hover:text-stone-300 transition-colors py-1">Privacy Policy</a>
                         <a href="#" className="hover:text-stone-300 transition-colors py-1">Terms of Service</a>
                         <a href="#" className="hover:text-stone-300 transition-colors py-1">Medical Disclaimer</a>

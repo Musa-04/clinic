@@ -21,14 +21,17 @@ import {
   Truck,
   Users,
   X,
+  LogOut,
+  Sparkles,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import {
   adminOrderService,
   ORDER_DATA_MODE,
   ORDER_STATUSES,
   normalizeOrderStatus,
 } from "../services/adminOrderService";
-import { formatOrderDate, normalizePaymentStatus } from "../utils/orderStorage";
+import { formatOrderDate, normalizePaymentStatus, seedDefaultOrders } from "../utils/orderStorage";
 import { getAppointments } from "../utils/appointmentStorage";
 import AdminProducts from "./AdminProducts";
 import AdminInsights from "./AdminInsights";
@@ -93,6 +96,7 @@ const getStatusTimestamp = (order, status) => {
 };
 
 const AdminOrders = ({ onNavigate, section = "orders" }) => {
+  const { user, logout } = useAuth();
   const [orders, setOrders] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [appointmentLoadError, setAppointmentLoadError] = useState("");
@@ -289,10 +293,10 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
         setActionError(error instanceof Error ? error.message : "The payment could not be updated. Refresh and try again.");
       } else {
         setActionError(type === "cancel"
-        ? "The order could not be cancelled. Refresh and try again."
-        : type === "status"
-          ? "The order status could not be updated. Refresh and try again."
-          : "The order could not be accepted. Refresh and try again.");
+          ? "The order could not be cancelled. Refresh and try again."
+          : type === "status"
+            ? "The order status could not be updated. Refresh and try again."
+            : "The order could not be accepted. Refresh and try again.");
       }
     } finally {
       setPendingActionId(null);
@@ -417,23 +421,45 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
           {NAV_ITEMS.map(({ label, section: itemSection, Icon }) => {
             const active = section === itemSection;
             return (
-            <button
-              key={label}
-              type="button"
-              title={`${label} management`}
-              onClick={() => {
-                setMobileNavOpen(false);
-                if (!active) onNavigate?.(`/admin/${itemSection}`);
-              }}
-              className={`group relative flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${active ? "bg-emerald-500/[0.11] text-emerald-200 before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-emerald-400" : "text-stone-300 hover:bg-white/[0.04] hover:text-white"}`}
-            >
-              <Icon className={`h-4 w-4 shrink-0 ${active ? "text-emerald-300" : "text-stone-400"}`} aria-hidden="true" />
-              {label}
-              {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]" />}
-            </button>
-          );})}
+              <button
+                key={label}
+                type="button"
+                title={`${label} management`}
+                onClick={() => {
+                  setMobileNavOpen(false);
+                  if (!active) onNavigate?.(`/admin/${itemSection}`);
+                }}
+                className={`group relative flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${active ? "bg-emerald-500/[0.11] text-emerald-200 before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-emerald-400" : "text-stone-300 hover:bg-white/[0.04] hover:text-white"}`}
+              >
+                <Icon className={`h-4 w-4 shrink-0 ${active ? "text-emerald-300" : "text-stone-400"}`} aria-hidden="true" />
+                {label}
+                {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]" />}
+              </button>
+            );
+          })}
         </nav>
         <div className="border-t border-white/[0.07] p-4 text-[11px] leading-5 text-stone-500">
+          <div className="mb-3 flex items-center justify-between rounded-xl bg-white/[0.03] p-2.5">
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-white">
+                {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Administrator"}
+              </p>
+              <p className="truncate text-[10px] text-emerald-400">
+                {user?.user_metadata?.clinic_role || "Admin"}
+              </p>
+            </div>
+            <button
+              type="button"
+              title="Sign Out"
+              onClick={async () => {
+                await logout();
+                onNavigate?.("/admin/login");
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition hover:bg-rose-500/10 hover:text-rose-300"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
           <p className="flex items-center gap-2"><Activity className="h-3.5 w-3.5 text-amber-300" aria-hidden="true" /> Development data adapter</p>
           <p className="mt-1 text-stone-600">{ORDER_DATA_MODE}</p>
         </div>
@@ -442,227 +468,270 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
       <main className="min-w-0 flex-1">
         {section === "orders" ? (
           <>
-        <header className="sticky top-0 z-30 border-b border-white/[0.07] bg-[#0b0d0c]/95 backdrop-blur-xl">
-          <div className="flex min-h-[4.25rem] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-            <div className="flex min-w-0 items-center gap-3">
-              <button type="button" aria-label="Open admin navigation" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 text-stone-300 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 lg:hidden">
-                <Menu className="h-5 w-5" aria-hidden="true" />
-              </button>
-              <div className="min-w-0">
-                <p className="truncate text-[11px] font-medium text-stone-500">Admin <span className="px-1 text-stone-700">/</span> Orders</p>
-                <h1 className="truncate text-sm font-semibold tracking-tight text-white">Order Management</h1>
-                <p className="hidden text-[11px] text-stone-500 sm:block">Manage customer orders and fulfillment</p>
+            <header className="sticky top-0 z-30 border-b border-white/[0.07] bg-[#0b0d0c]/95 backdrop-blur-xl">
+              <div className="flex min-h-[4.25rem] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+                <div className="flex min-w-0 items-center gap-3">
+                  <button type="button" aria-label="Open admin navigation" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 text-stone-300 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 lg:hidden">
+                    <Menu className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px] font-medium text-stone-500">Admin <span className="px-1 text-stone-700">/</span> Orders</p>
+                    <h1 className="truncate text-sm font-semibold tracking-tight text-white">Order Management</h1>
+                    <p className="hidden text-[11px] text-stone-500 sm:block">Manage customer orders and fulfillment</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      seedDefaultOrders();
+                      refreshOrders(true);
+                      showToast("5 sample customer orders loaded!");
+                    }}
+                    className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span className="hidden sm:inline">Load 5 Customer Orders</span>
+                    <span className="sm:hidden">Load 5</span>
+                  </button>
+                  <button type="button" onClick={() => refreshOrders(true)} disabled={isRefreshing} className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 text-xs font-semibold text-stone-300 transition hover:border-white/15 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-wait disabled:opacity-60">
+                    <ArrowDownUp className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} aria-hidden="true" />
+                    <span className="hidden sm:inline">{isRefreshing ? "Refreshing..." : "Refresh orders"}</span>
+                    <span className="sm:hidden">{isRefreshing ? "Refreshing" : "Refresh"}</span>
+                  </button>
+                </div>
               </div>
-            </div>
-            <button type="button" onClick={() => refreshOrders(true)} disabled={isRefreshing} className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 text-xs font-semibold text-stone-300 transition hover:border-white/15 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-wait disabled:opacity-60">
-              <ArrowDownUp className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} aria-hidden="true" />
-              <span className="hidden sm:inline">{isRefreshing ? "Refreshing..." : "Refresh orders"}</span>
-              <span className="sm:hidden">{isRefreshing ? "Refreshing" : "Refresh"}</span>
-            </button>
-          </div>
-        </header>
+            </header>
 
-        <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-400">Malik's Polyclinic <span className="text-stone-600">/</span> Store operations</p>
-              <h2 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Order Management</h2>
-              <p className="mt-2 text-sm text-stone-400">Manage customer orders and fulfillment</p>
-            </div>
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-amber-300/15 bg-amber-300/[0.05] px-3 py-1.5 text-[11px] font-medium text-amber-200/90">
-              <CircleUserRound className="h-3.5 w-3.5 text-amber-300" aria-hidden="true" /> Authentication not configured
-            </span>
-          </div>
-
-          <section aria-label="Order summaries" className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-            {[
-              { label: "Total Orders", value: orders.length, Icon: ShoppingBag, tint: "text-white" },
-              { label: "Pending", value: summary.PENDING, Icon: Activity, tint: "text-amber-200" },
-              { label: "Confirmed", value: summary.CONFIRMED, Icon: CheckCircle2, tint: "text-sky-200" },
-              { label: "Shipped", value: summary.SHIPPED, Icon: Truck, tint: "text-indigo-200" },
-              { label: "Delivered", value: summary.DELIVERED, Icon: Package, tint: "text-emerald-200" },
-              { label: "Appointments", value: appointments.length, Icon: CalendarDays, tint: "text-emerald-200" },
-            ].map(({ label, value, Icon, tint }) => (
-              <article key={label} className="group min-w-0 rounded-2xl border border-white/[0.07] bg-linear-to-b from-neutral-900 to-neutral-900/70 p-4 shadow-sm shadow-black/20 transition-colors hover:border-white/10 sm:p-5">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-xs font-medium text-stone-400">{label}</p>
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.04]">
-                    <Icon className={`h-4 w-4 ${tint}`} aria-hidden="true" />
+            <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+              <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-400">Malik's Polyclinic <span className="text-stone-600">/</span> Store operations</p>
+                  <h2 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Order Management</h2>
+                  <p className="mt-2 text-sm text-stone-400">Manage customer orders and fulfillment</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/[0.06] px-3 py-1.5 text-[11px] font-medium text-emerald-300">
+                    <BadgeCheck className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+                    <span>Admin: {user?.user_metadata?.full_name || user?.email || "Authorized"}</span>
                   </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await logout();
+                      onNavigate?.("/admin/login");
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[11px] font-medium text-stone-400 transition hover:border-rose-400/30 hover:bg-rose-500/10 hover:text-rose-200"
+                  >
+                    <LogOut className="h-3 w-3" />
+                    <span>Logout</span>
+                  </button>
                 </div>
-                <p className={`mt-3 text-2xl font-bold tracking-tight ${tint}`}>{value}</p>
-              </article>
-            ))}
-          </section>
-
-          <section aria-label="Order search and filters" className="mt-6 rounded-2xl border border-white/[0.07] bg-neutral-900/80 p-4 shadow-sm shadow-black/20 sm:p-5">
-            <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-[minmax(16rem,1.4fr)_repeat(2,minmax(10rem,0.8fr))_repeat(2,minmax(9rem,0.7fr))] 2xl:items-end">
-              <label className="relative block min-w-0">
-                <span className="sr-only">Search orders by ID, customer name, phone, or email</span>
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" aria-hidden="true" />
-                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by order ID, name, phone or email" className="min-h-11 w-full rounded-xl border border-white/[0.08] bg-neutral-950/80 pl-10 pr-3 text-sm text-white placeholder:text-stone-500 focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-400/15" />
-              </label>
-              <label className="block min-w-0">
-                <span className="mb-1.5 block text-[10px] font-medium text-stone-500">Payment Method</span>
-                <select value={paymentFilter} onChange={(event) => setPaymentFilter(event.target.value)} className="min-h-11 w-full rounded-xl border border-white/[0.08] bg-neutral-950/80 px-3 text-sm text-stone-200 focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-400/15">
-                  <option value="ALL">All payment methods</option>
-                  {paymentOptions.map((method) => <option key={method} value={method.toUpperCase()}>{method}</option>)}
-                </select>
-              </label>
-              <label className="block min-w-0">
-                <span className="mb-1.5 block text-[10px] font-medium text-stone-500">Payment Status</span>
-                <select value={paymentStatusFilter} onChange={(event) => setPaymentStatusFilter(event.target.value)} className="min-h-11 w-full rounded-xl border border-white/[0.08] bg-neutral-950/80 px-3 text-sm text-stone-200 focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-400/15">
-                  <option value="ALL">All payment statuses</option>
-                  {paymentStatusOptions.map((status) => <option key={status} value={status}>{getPaymentStatusLabel(status)}</option>)}
-                </select>
-              </label>
-              <label className="block min-w-0">
-                <span className="mb-1.5 block text-[10px] font-medium text-stone-500">From Date</span>
-                <span className="flex items-center rounded-xl border border-white/[0.08] bg-neutral-950/80 px-3 focus-within:border-emerald-400/60 focus-within:ring-2 focus-within:ring-emerald-400/15">
-                  <input aria-label="From Date" type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} className="min-h-11 min-w-0 w-full bg-transparent text-xs text-stone-200 focus:outline-none" />
-                </span>
-              </label>
-              <label className="block min-w-0">
-                <span className="mb-1.5 block text-[10px] font-medium text-stone-500">To Date</span>
-                <span className="flex items-center rounded-xl border border-white/[0.08] bg-neutral-950/80 px-3 focus-within:border-emerald-400/60 focus-within:ring-2 focus-within:ring-emerald-400/15">
-                  <input aria-label="To Date" type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="min-h-11 min-w-0 w-full bg-transparent text-xs text-stone-200 focus:outline-none" />
-                </span>
-              </label>
-            </div>
-            <div className="mt-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter by order status">
-              {STATUS_FILTERS.map((status) => (
-                <button key={status} type="button" onClick={() => setStatusFilter(status)} aria-pressed={statusFilter === status} className={`min-h-10 shrink-0 rounded-xl border px-3.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${statusFilter === status ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200" : "border-white/[0.07] text-stone-400 hover:bg-white/[0.04] hover:text-stone-200"}`}>
-                  {status === "ALL" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()}
-                </button>
-              ))}
-            </div>
-            {invalidDateRange && <p role="alert" className="mt-3 text-xs text-rose-300">The start date must be on or before the end date.</p>}
-          </section>
-
-          {(loadError || actionError) && <div role="alert" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-300/15 bg-rose-300/[0.05] px-4 py-3 text-sm text-rose-200"><span>{loadError || actionError}</span>{loadError && <button type="button" onClick={() => refreshOrders(true)} disabled={isRefreshing} className="min-h-10 rounded-xl border border-rose-200/15 px-3.5 text-xs font-semibold transition hover:bg-rose-300/[0.08] disabled:opacity-50">Try again</button>}</div>}
-
-          <section className="mt-5 overflow-hidden rounded-2xl border border-white/[0.07] bg-neutral-900/80 shadow-sm shadow-black/20">
-            <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-4 sm:px-5">
-              <div>
-                <h3 className="text-sm font-semibold text-white">Orders</h3>
-                <p className="mt-1 text-xs text-stone-500">{filteredOrders.length} matching order{filteredOrders.length === 1 ? "" : "s"}</p>
               </div>
-              {selectedOrders.length > 0 && <span className="text-xs text-stone-400">{selectedOrders.length} selected</span>}
-            </div>
 
-            {isInitialLoading ? (
-              <div role="status" aria-label="Loading orders" className="space-y-4 px-5 py-8">
-                {[1, 2, 3].map((row) => <div key={row} className="flex items-center gap-4 animate-pulse"><span className="h-4 w-4 rounded bg-white/[0.06]" /><span className="h-4 w-28 rounded bg-white/[0.06]" /><span className="h-4 flex-1 rounded bg-white/[0.04]" /><span className="h-8 w-24 rounded-xl bg-white/[0.05]" /></div>)}
-                <span className="sr-only">Loading orders...</span>
-              </div>
-            ) : loadError ? (
-              <div className="px-5 py-14 text-center"><span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-rose-300/[0.06] text-rose-200"><Activity className="h-5 w-5" aria-hidden="true" /></span><h4 className="mt-3 text-sm font-semibold text-white">Failed to load orders</h4><p className="mt-1 text-xs text-stone-500">Use refresh to try loading the order source again.</p></div>
-            ) : filteredOrders.length === 0 ? (
-              <div className="px-5 py-14 text-center">
-                <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/[0.07] text-emerald-300"><ShoppingBag className="h-5 w-5" aria-hidden="true" /></span>
-                <h4 className="mt-3 text-sm font-semibold text-white">{orders.length === 0 ? "No orders yet" : "No orders found"}</h4>
-                <p className="mt-1 text-xs text-stone-500">{invalidDateRange ? "Choose a valid date range." : orders.length === 0 ? "Orders will appear here when customers place them." : "Try changing your search or filters."}</p>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-3 p-3 lg:hidden">
-                  {filteredOrders.map((order) => (
-                    <article key={order.id} className="min-w-0 rounded-xl border border-white/[0.07] bg-neutral-950/55 p-4">
-                    <div className="flex min-w-0 items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <input aria-label={`Select order ${order.id}`} type="checkbox" checked={selectedOrders.includes(order.id)} onChange={() => setSelectedOrders((current) => current.includes(order.id) ? current.filter((id) => id !== order.id) : [...current, order.id])} className="mt-1 h-4 w-4 shrink-0 accent-emerald-500" />
-                        <div className="min-w-0">
-                          <button type="button" onClick={() => openOrderDetails(order)} className="block max-w-full break-all text-left font-mono text-xs font-semibold text-emerald-300 hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">{order.id}</button>
-                          <p className="mt-1 truncate text-sm font-semibold text-stone-100">{order.customer?.name || "Customer"}</p>
-                          <p className="mt-1 break-all text-xs text-stone-400">{order.customer?.phone || "Phone not provided"}</p>
-                          {order.customer?.email && <p className="mt-1 break-all text-xs text-stone-500">{order.customer.email}</p>}
-                        </div>
-                      </div>
-                      {renderStatus(order)}
+              <section aria-label="Order summaries" className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+                {[
+                  { label: "Total Orders", value: orders.length, Icon: ShoppingBag, tint: "text-white" },
+                  { label: "Pending", value: summary.PENDING, Icon: Activity, tint: "text-amber-200" },
+                  { label: "Confirmed", value: summary.CONFIRMED, Icon: CheckCircle2, tint: "text-sky-200" },
+                  { label: "Shipped", value: summary.SHIPPED, Icon: Truck, tint: "text-indigo-200" },
+                  { label: "Delivered", value: summary.DELIVERED, Icon: Package, tint: "text-emerald-200" },
+                  { label: "Appointments", value: appointments.length, Icon: CalendarDays, tint: "text-emerald-200" },
+                ].map(({ label, value, Icon, tint }) => (
+                  <article key={label} className="group min-w-0 rounded-2xl border border-white/[0.07] bg-linear-to-b from-neutral-900 to-neutral-900/70 p-4 shadow-sm shadow-black/20 transition-colors hover:border-white/10 sm:p-5">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-xs font-medium text-stone-400">{label}</p>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.04]">
+                        <Icon className={`h-4 w-4 ${tint}`} aria-hidden="true" />
+                      </span>
                     </div>
-                    <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/[0.06] pt-3 text-xs">
-                      <div className="min-w-0"><p className="text-stone-500">Amount</p><p className="mt-1 font-semibold text-white">{money(order.total)}</p></div>
-                      <div className="min-w-0"><p className="text-stone-500">Payment</p>{renderPayment(order)}</div>
-                      <div className="col-span-2 min-w-0"><p className="text-stone-500">Products</p><p className="mt-1 text-stone-200">{(order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0)} item{(order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0) === 1 ? "" : "s"}</p><p className="mt-1 break-words text-stone-500">{(order.items || []).map((item) => item.name).filter(Boolean).join(", ")}</p></div>
-                      <div className="col-span-2"><p className="text-stone-500">Order Date</p><p className="mt-1 text-stone-300">{formatOrderDate(order.createdAt, { dateStyle: "medium", timeStyle: "short" })}</p></div>
-                    </div>
-                    <div className="mt-4 border-t border-white/[0.06] pt-3">{actionForOrder(order)}</div>
-                    </article>
-                  ))}
-                </div>
-                <div className="hidden max-w-full overflow-x-auto overscroll-x-contain lg:block">
-                  <table className="w-full min-w-[1180px] border-collapse text-left">
-                  <thead className="bg-neutral-950/55 text-[10px] uppercase tracking-[0.12em] text-stone-500">
-                    <tr>
-                      <th className="w-12 px-4 py-3.5"><input aria-label="Select all visible orders" type="checkbox" checked={allVisibleSelected} onChange={toggleAll} className="h-4 w-4 accent-emerald-500" /></th>
-                      <th className="px-4 py-3.5 font-medium">Order ID</th>
-                      <th className="px-4 py-3.5 font-medium">Customer</th>
-                      <th className="px-4 py-3.5 font-medium">Products</th>
-                      <th className="px-4 py-3.5 font-medium">Amount</th>
-                      <th className="px-4 py-3.5 font-medium">Payment</th>
-                      <th className="px-4 py-3.5 font-medium">Status</th>
-                      <th className="px-4 py-3.5 font-medium">Order Date</th>
-                      <th className="px-4 py-3.5 font-medium">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.045]">
-                    {filteredOrders.map((order) => (
-                      <tr key={order.id} className="transition-colors hover:bg-white/[0.025]">
-                        <td className="px-4 py-4"><input aria-label={`Select order ${order.id}`} type="checkbox" checked={selectedOrders.includes(order.id)} onChange={() => setSelectedOrders((current) => current.includes(order.id) ? current.filter((id) => id !== order.id) : [...current, order.id])} className="h-4 w-4 accent-emerald-500" /></td>
-                        <td className="px-4 py-4"><button type="button" onClick={() => openOrderDetails(order)} className="max-w-40 truncate rounded font-mono text-xs font-semibold text-emerald-300 hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">{order.id}</button></td>
-                        <td className="px-4 py-4"><p className="max-w-44 truncate text-xs font-semibold text-stone-100">{order.customer?.name || "Customer"}</p><p className="mt-1 text-[11px] text-stone-400">{order.customer?.phone || "Phone not provided"}</p>{order.customer?.email && <p className="mt-1 max-w-44 truncate text-[11px] text-stone-500">{order.customer.email}</p>}</td>
-                        <td className="px-4 py-4"><p className="max-w-48 text-xs text-stone-200">{(order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0)} item{(order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0) === 1 ? "" : "s"}</p><p className="mt-1 max-w-48 truncate text-[11px] text-stone-500">{(order.items || []).map((item) => item.name).filter(Boolean).join(", ")}</p></td>
-                        <td className="px-4 py-4 text-xs font-semibold text-white">{money(order.total)}</td>
-                        <td className="px-4 py-4">{renderPayment(order)}</td>
-                        <td className="px-4 py-4">{renderStatus(order)}</td>
-                        <td className="whitespace-nowrap px-4 py-4 text-xs text-stone-400">{formatOrderDate(order.createdAt, { dateStyle: "medium", timeStyle: "short" })}</td>
-                        <td className="px-4 py-4">{actionForOrder(order)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </section>
-
-          <section aria-labelledby="appointments-title" className="mt-5 overflow-hidden rounded-2xl border border-white/[0.07] bg-neutral-900/80 shadow-sm shadow-black/20">
-            <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-4 sm:px-5">
-              <div>
-                <h3 id="appointments-title" className="text-sm font-semibold text-white">Appointment Requests</h3>
-                <p className="mt-1 text-xs text-stone-500">{appointments.length} request{appointments.length === 1 ? "" : "s"} saved</p>
-              </div>
-              <button type="button" onClick={refreshAppointments} className="min-h-10 rounded-xl border border-white/10 px-3 text-xs font-semibold text-stone-300 transition hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">Refresh appointments</button>
-            </div>
-            {appointmentLoadError ? (
-              <p role="alert" className="px-5 py-8 text-center text-sm text-rose-200">{appointmentLoadError}</p>
-            ) : appointments.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-stone-500">No appointment requests have been submitted yet.</p>
-            ) : (
-              <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-3">
-                {appointments.map((appointment) => (
-                  <article key={appointment.id} className="min-w-0 rounded-xl border border-white/[0.07] bg-neutral-950/55 p-4">
-                    <div className="flex min-w-0 items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h4 className="break-words text-sm font-semibold text-white">{appointment.fullName}</h4>
-                        <p className="mt-1 text-xs text-stone-500">Received {formatOrderDate(appointment.createdAt, { dateStyle: "medium", timeStyle: "short" })}</p>
-                      </div>
-                      <span className="shrink-0 rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-2.5 py-1 text-[10px] font-medium text-emerald-200">Request</span>
-                    </div>
-                    <div className="mt-4 space-y-2 border-t border-white/[0.06] pt-3 text-xs">
-                      <p className="flex min-w-0 items-start gap-2 text-stone-300"><Phone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-stone-500" /><span className="break-all">{appointment.phone}</span></p>
-                      {appointment.email && <p className="flex min-w-0 items-start gap-2 text-stone-300"><Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-stone-500" /><span className="break-all">{appointment.email}</span></p>}
-                      <p className="pt-1 text-stone-400"><span className="text-stone-500">Doctor:</span> {appointment.doctor}</p>
-                      <p className="text-stone-400"><span className="text-stone-500">Concern:</span> {appointment.concern}</p>
-                      <p className="text-stone-400"><span className="text-stone-500">Preferred date:</span> {appointment.preferredDate}</p>
-                      {appointment.message && <p className="break-words border-t border-white/[0.05] pt-2 leading-5 text-stone-400"><span className="text-stone-500">Message:</span> {appointment.message}</p>}
-                    </div>
+                    <p className={`mt-3 text-2xl font-bold tracking-tight ${tint}`}>{value}</p>
                   </article>
                 ))}
-              </div>
-            )}
-          </section>
-        </div>
+              </section>
+
+              <section aria-label="Order search and filters" className="mt-6 rounded-2xl border border-white/[0.07] bg-neutral-900/80 p-4 shadow-sm shadow-black/20 sm:p-5">
+                <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-[minmax(16rem,1.4fr)_repeat(2,minmax(10rem,0.8fr))_repeat(2,minmax(9rem,0.7fr))] 2xl:items-end">
+                  <label className="relative block min-w-0">
+                    <span className="sr-only">Search orders by ID, customer name, phone, or email</span>
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" aria-hidden="true" />
+                    <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by order ID, name, phone or email" className="min-h-11 w-full rounded-xl border border-white/[0.08] bg-neutral-950/80 pl-10 pr-3 text-sm text-white placeholder:text-stone-500 focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-400/15" />
+                  </label>
+                  <label className="block min-w-0">
+                    <span className="mb-1.5 block text-[10px] font-medium text-stone-500">Payment Method</span>
+                    <select value={paymentFilter} onChange={(event) => setPaymentFilter(event.target.value)} className="min-h-11 w-full rounded-xl border border-white/[0.08] bg-neutral-950/80 px-3 text-sm text-stone-200 focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-400/15">
+                      <option value="ALL">All payment methods</option>
+                      {paymentOptions.map((method) => <option key={method} value={method.toUpperCase()}>{method}</option>)}
+                    </select>
+                  </label>
+                  <label className="block min-w-0">
+                    <span className="mb-1.5 block text-[10px] font-medium text-stone-500">Payment Status</span>
+                    <select value={paymentStatusFilter} onChange={(event) => setPaymentStatusFilter(event.target.value)} className="min-h-11 w-full rounded-xl border border-white/[0.08] bg-neutral-950/80 px-3 text-sm text-stone-200 focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-400/15">
+                      <option value="ALL">All payment statuses</option>
+                      {paymentStatusOptions.map((status) => <option key={status} value={status}>{getPaymentStatusLabel(status)}</option>)}
+                    </select>
+                  </label>
+                  <label className="block min-w-0">
+                    <span className="mb-1.5 block text-[10px] font-medium text-stone-500">From Date</span>
+                    <span className="flex items-center rounded-xl border border-white/[0.08] bg-neutral-950/80 px-3 focus-within:border-emerald-400/60 focus-within:ring-2 focus-within:ring-emerald-400/15">
+                      <input aria-label="From Date" type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} className="min-h-11 min-w-0 w-full bg-transparent text-xs text-stone-200 focus:outline-none" />
+                    </span>
+                  </label>
+                  <label className="block min-w-0">
+                    <span className="mb-1.5 block text-[10px] font-medium text-stone-500">To Date</span>
+                    <span className="flex items-center rounded-xl border border-white/[0.08] bg-neutral-950/80 px-3 focus-within:border-emerald-400/60 focus-within:ring-2 focus-within:ring-emerald-400/15">
+                      <input aria-label="To Date" type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="min-h-11 min-w-0 w-full bg-transparent text-xs text-stone-200 focus:outline-none" />
+                    </span>
+                  </label>
+                </div>
+                <div className="mt-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter by order status">
+                  {STATUS_FILTERS.map((status) => (
+                    <button key={status} type="button" onClick={() => setStatusFilter(status)} aria-pressed={statusFilter === status} className={`min-h-10 shrink-0 rounded-xl border px-3.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${statusFilter === status ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200" : "border-white/[0.07] text-stone-400 hover:bg-white/[0.04] hover:text-stone-200"}`}>
+                      {status === "ALL" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()}
+                    </button>
+                  ))}
+                </div>
+                {invalidDateRange && <p role="alert" className="mt-3 text-xs text-rose-300">The start date must be on or before the end date.</p>}
+              </section>
+
+              {(loadError || actionError) && <div role="alert" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-300/15 bg-rose-300/[0.05] px-4 py-3 text-sm text-rose-200"><span>{loadError || actionError}</span>{loadError && <button type="button" onClick={() => refreshOrders(true)} disabled={isRefreshing} className="min-h-10 rounded-xl border border-rose-200/15 px-3.5 text-xs font-semibold transition hover:bg-rose-300/[0.08] disabled:opacity-50">Try again</button>}</div>}
+
+              <section className="mt-5 overflow-hidden rounded-2xl border border-white/[0.07] bg-neutral-900/80 shadow-sm shadow-black/20">
+                <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-4 sm:px-5">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Orders</h3>
+                    <p className="mt-1 text-xs text-stone-500">{filteredOrders.length} matching order{filteredOrders.length === 1 ? "" : "s"}</p>
+                  </div>
+                  {selectedOrders.length > 0 && <span className="text-xs text-stone-400">{selectedOrders.length} selected</span>}
+                </div>
+
+                {isInitialLoading ? (
+                  <div role="status" aria-label="Loading orders" className="space-y-4 px-5 py-8">
+                    {[1, 2, 3].map((row) => <div key={row} className="flex items-center gap-4 animate-pulse"><span className="h-4 w-4 rounded bg-white/[0.06]" /><span className="h-4 w-28 rounded bg-white/[0.06]" /><span className="h-4 flex-1 rounded bg-white/[0.04]" /><span className="h-8 w-24 rounded-xl bg-white/[0.05]" /></div>)}
+                    <span className="sr-only">Loading orders...</span>
+                  </div>
+                ) : loadError ? (
+                  <div className="px-5 py-14 text-center"><span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-rose-300/[0.06] text-rose-200"><Activity className="h-5 w-5" aria-hidden="true" /></span><h4 className="mt-3 text-sm font-semibold text-white">Failed to load orders</h4><p className="mt-1 text-xs text-stone-500">Use refresh to try loading the order source again.</p></div>
+                ) : filteredOrders.length === 0 ? (
+                  <div className="px-5 py-14 text-center">
+                    <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/[0.07] text-emerald-300"><ShoppingBag className="h-5 w-5" aria-hidden="true" /></span>
+                    <h4 className="mt-3 text-sm font-semibold text-white">{orders.length === 0 ? "No orders yet" : "No orders found"}</h4>
+                    <p className="mt-1 text-xs text-stone-500">{invalidDateRange ? "Choose a valid date range." : orders.length === 0 ? "Orders will appear here when customers place them." : "Try changing your search or filters."}</p>
+                    {orders.length === 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          seedDefaultOrders();
+                          refreshOrders(true);
+                          showToast("5 sample customer orders loaded!");
+                        }}
+                        className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-500 shadow-md"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        <span>Load 5 Sample Customer Orders</span>
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-3 p-3 lg:hidden">
+                      {filteredOrders.map((order) => (
+                        <article key={order.id} className="min-w-0 rounded-xl border border-white/[0.07] bg-neutral-950/55 p-4">
+                          <div className="flex min-w-0 items-start justify-between gap-3">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <input aria-label={`Select order ${order.id}`} type="checkbox" checked={selectedOrders.includes(order.id)} onChange={() => setSelectedOrders((current) => current.includes(order.id) ? current.filter((id) => id !== order.id) : [...current, order.id])} className="mt-1 h-4 w-4 shrink-0 accent-emerald-500" />
+                              <div className="min-w-0">
+                                <button type="button" onClick={() => openOrderDetails(order)} className="block max-w-full break-all text-left font-mono text-xs font-semibold text-emerald-300 hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">{order.id}</button>
+                                <p className="mt-1 truncate text-sm font-semibold text-stone-100">{order.customer?.name || "Customer"}</p>
+                                <p className="mt-1 break-all text-xs text-stone-400">{order.customer?.phone || "Phone not provided"}</p>
+                                {order.customer?.email && <p className="mt-1 break-all text-xs text-stone-500">{order.customer.email}</p>}
+                              </div>
+                            </div>
+                            {renderStatus(order)}
+                          </div>
+                          <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/[0.06] pt-3 text-xs">
+                            <div className="min-w-0"><p className="text-stone-500">Amount</p><p className="mt-1 font-semibold text-white">{money(order.total)}</p></div>
+                            <div className="min-w-0"><p className="text-stone-500">Payment</p>{renderPayment(order)}</div>
+                            <div className="col-span-2 min-w-0"><p className="text-stone-500">Products</p><p className="mt-1 text-stone-200">{(order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0)} item{(order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0) === 1 ? "" : "s"}</p><p className="mt-1 break-words text-stone-500">{(order.items || []).map((item) => item.name).filter(Boolean).join(", ")}</p></div>
+                            <div className="col-span-2"><p className="text-stone-500">Order Date</p><p className="mt-1 text-stone-300">{formatOrderDate(order.createdAt, { dateStyle: "medium", timeStyle: "short" })}</p></div>
+                          </div>
+                          <div className="mt-4 border-t border-white/[0.06] pt-3">{actionForOrder(order)}</div>
+                        </article>
+                      ))}
+                    </div>
+                    <div className="hidden max-w-full overflow-x-auto overscroll-x-contain lg:block">
+                      <table className="w-full min-w-[1180px] border-collapse text-left">
+                        <thead className="bg-neutral-950/55 text-[10px] uppercase tracking-[0.12em] text-stone-500">
+                          <tr>
+                            <th className="w-12 px-4 py-3.5"><input aria-label="Select all visible orders" type="checkbox" checked={allVisibleSelected} onChange={toggleAll} className="h-4 w-4 accent-emerald-500" /></th>
+                            <th className="px-4 py-3.5 font-medium">Order ID</th>
+                            <th className="px-4 py-3.5 font-medium">Customer</th>
+                            <th className="px-4 py-3.5 font-medium">Products</th>
+                            <th className="px-4 py-3.5 font-medium">Amount</th>
+                            <th className="px-4 py-3.5 font-medium">Payment</th>
+                            <th className="px-4 py-3.5 font-medium">Status</th>
+                            <th className="px-4 py-3.5 font-medium">Order Date</th>
+                            <th className="px-4 py-3.5 font-medium">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.045]">
+                          {filteredOrders.map((order) => (
+                            <tr key={order.id} className="transition-colors hover:bg-white/[0.025]">
+                              <td className="px-4 py-4"><input aria-label={`Select order ${order.id}`} type="checkbox" checked={selectedOrders.includes(order.id)} onChange={() => setSelectedOrders((current) => current.includes(order.id) ? current.filter((id) => id !== order.id) : [...current, order.id])} className="h-4 w-4 accent-emerald-500" /></td>
+                              <td className="px-4 py-4"><button type="button" onClick={() => openOrderDetails(order)} className="max-w-40 truncate rounded font-mono text-xs font-semibold text-emerald-300 hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">{order.id}</button></td>
+                              <td className="px-4 py-4"><p className="max-w-44 truncate text-xs font-semibold text-stone-100">{order.customer?.name || "Customer"}</p><p className="mt-1 text-[11px] text-stone-400">{order.customer?.phone || "Phone not provided"}</p>{order.customer?.email && <p className="mt-1 max-w-44 truncate text-[11px] text-stone-500">{order.customer.email}</p>}</td>
+                              <td className="px-4 py-4"><p className="max-w-48 text-xs text-stone-200">{(order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0)} item{(order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0) === 1 ? "" : "s"}</p><p className="mt-1 max-w-48 truncate text-[11px] text-stone-500">{(order.items || []).map((item) => item.name).filter(Boolean).join(", ")}</p></td>
+                              <td className="px-4 py-4 text-xs font-semibold text-white">{money(order.total)}</td>
+                              <td className="px-4 py-4">{renderPayment(order)}</td>
+                              <td className="px-4 py-4">{renderStatus(order)}</td>
+                              <td className="whitespace-nowrap px-4 py-4 text-xs text-stone-400">{formatOrderDate(order.createdAt, { dateStyle: "medium", timeStyle: "short" })}</td>
+                              <td className="px-4 py-4">{actionForOrder(order)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </section>
+
+              <section aria-labelledby="appointments-title" className="mt-5 overflow-hidden rounded-2xl border border-white/[0.07] bg-neutral-900/80 shadow-sm shadow-black/20">
+                <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-4 sm:px-5">
+                  <div>
+                    <h3 id="appointments-title" className="text-sm font-semibold text-white">Appointment Requests</h3>
+                    <p className="mt-1 text-xs text-stone-500">{appointments.length} request{appointments.length === 1 ? "" : "s"} saved</p>
+                  </div>
+                  <button type="button" onClick={refreshAppointments} className="min-h-10 rounded-xl border border-white/10 px-3 text-xs font-semibold text-stone-300 transition hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">Refresh appointments</button>
+                </div>
+                {appointmentLoadError ? (
+                  <p role="alert" className="px-5 py-8 text-center text-sm text-rose-200">{appointmentLoadError}</p>
+                ) : appointments.length === 0 ? (
+                  <p className="px-5 py-10 text-center text-sm text-stone-500">No appointment requests have been submitted yet.</p>
+                ) : (
+                  <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {appointments.map((appointment) => (
+                      <article key={appointment.id} className="min-w-0 rounded-xl border border-white/[0.07] bg-neutral-950/55 p-4">
+                        <div className="flex min-w-0 items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <h4 className="break-words text-sm font-semibold text-white">{appointment.fullName}</h4>
+                            <p className="mt-1 text-xs text-stone-500">Received {formatOrderDate(appointment.createdAt, { dateStyle: "medium", timeStyle: "short" })}</p>
+                          </div>
+                          <span className="shrink-0 rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-2.5 py-1 text-[10px] font-medium text-emerald-200">Request</span>
+                        </div>
+                        <div className="mt-4 space-y-2 border-t border-white/[0.06] pt-3 text-xs">
+                          <p className="flex min-w-0 items-start gap-2 text-stone-300"><Phone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-stone-500" /><span className="break-all">{appointment.phone}</span></p>
+                          {appointment.email && <p className="flex min-w-0 items-start gap-2 text-stone-300"><Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-stone-500" /><span className="break-all">{appointment.email}</span></p>}
+                          <p className="pt-1 text-stone-400"><span className="text-stone-500">Doctor:</span> {appointment.doctor}</p>
+                          <p className="text-stone-400"><span className="text-stone-500">Concern:</span> {appointment.concern}</p>
+                          <p className="text-stone-400"><span className="text-stone-500">Preferred date:</span> {appointment.preferredDate}</p>
+                          {appointment.message && <p className="break-words border-t border-white/[0.05] pt-2 leading-5 text-stone-400"><span className="text-stone-500">Message:</span> {appointment.message}</p>}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
           </>
         ) : section === "products" ? (
           <AdminProducts onNavigate={onNavigate} onOpenNav={() => setMobileNavOpen(true)} />
