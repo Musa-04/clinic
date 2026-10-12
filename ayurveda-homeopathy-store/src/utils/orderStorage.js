@@ -1,7 +1,13 @@
 export const ORDERS_STORAGE_KEY = "maliks_orders";
 const ORDER_SEQUENCE_KEY = "maliks_order_sequence";
 
-const ORDER_STATUS_SEQUENCE = ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"];
+const ORDER_STATUS_SEQUENCE = [
+  "PENDING",
+  "CONFIRMED",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+];
 const LEGACY_STATUS_MAP = {
   PLACED: "PENDING",
   PENDING: "PENDING",
@@ -12,7 +18,9 @@ const LEGACY_STATUS_MAP = {
 };
 
 const normalizeStatusValue = (value) => {
-  const normalized = String(value ?? "PENDING").trim().toUpperCase();
+  const normalized = String(value ?? "PENDING")
+    .trim()
+    .toUpperCase();
   return LEGACY_STATUS_MAP[normalized] || "PENDING";
 };
 
@@ -21,7 +29,13 @@ export const normalizePaymentStatus = (value) => {
   const upper = normalized.toUpperCase();
   if (upper === "VERIFIED" || upper === "PAID") return "VERIFIED";
   if (upper === "FAILED" || upper === "DECLINED") return "FAILED";
-  if (upper === "PENDING" || upper === "PENDING_VERIFICATION" || upper === "PENDING VERIFICATION" || upper === "SUBMITTED") return "PENDING_VERIFICATION";
+  if (
+    upper === "PENDING" ||
+    upper === "PENDING_VERIFICATION" ||
+    upper === "PENDING VERIFICATION" ||
+    upper === "SUBMITTED"
+  )
+    return "PENDING_VERIFICATION";
   return normalized || "PENDING VERIFICATION";
 };
 
@@ -42,11 +56,17 @@ export const canonicalizeOrder = (order) => {
         name: item.name ?? "Product",
         quantity: Number(item.quantity || 0) || 1,
         price: Number(item.price || 0),
-        subtotal: Number(item.subtotal ?? Number(item.price || 0) * Number(item.quantity || 0)),
+        subtotal: Number(
+          item.subtotal ?? Number(item.price || 0) * Number(item.quantity || 0),
+        ),
       }))
     : [];
 
-  const subtotal = Number(order.subtotal || items.reduce((sum, item) => sum + Number(item.subtotal || 0), 0) || 0);
+  const subtotal = Number(
+    order.subtotal ||
+      items.reduce((sum, item) => sum + Number(item.subtotal || 0), 0) ||
+      0,
+  );
   const shipping = Number(order.shipping || 0);
   const tax = Number(order.tax || 0);
   const discount = Number(order.discount || 0);
@@ -55,20 +75,33 @@ export const canonicalizeOrder = (order) => {
   const baseHistory = Array.isArray(order.statusHistory)
     ? order.statusHistory.map((entry) => ({
         ...entry,
-        status: normalizeStatusValue(entry?.status || entry?.orderStatus || orderStatus),
-        at: entry?.at || entry?.createdAt || order.createdAt || new Date().toISOString(),
+        status: normalizeStatusValue(
+          entry?.status || entry?.orderStatus || orderStatus,
+        ),
+        at:
+          entry?.at ||
+          entry?.createdAt ||
+          order.createdAt ||
+          new Date().toISOString(),
       }))
     : [];
-  const hasCurrentStatus = baseHistory.some((entry) => normalizeStatusValue(entry.status) === orderStatus);
+  const hasCurrentStatus = baseHistory.some(
+    (entry) => normalizeStatusValue(entry.status) === orderStatus,
+  );
   const statusHistory = hasCurrentStatus
     ? baseHistory
     : [
         ...baseHistory,
-        { status: orderStatus, at: order.createdAt || new Date().toISOString() },
+        {
+          status: orderStatus,
+          at: order.createdAt || new Date().toISOString(),
+        },
       ];
 
   const cancellation = {
-    cancelled: Boolean(order.cancellation?.cancelled || orderStatus === "CANCELLED"),
+    cancelled: Boolean(
+      order.cancellation?.cancelled || orderStatus === "CANCELLED",
+    ),
     reason: order.cancellation?.reason || "",
     cancelledAt: order.cancellation?.cancelledAt || null,
   };
@@ -89,8 +122,12 @@ export const canonicalizeOrder = (order) => {
       pincode: order.deliveryAddress?.pincode || "",
       country: order.deliveryAddress?.country || "India",
     },
-    notes: String(order.notes || order.customerNotes || order.message || "").trim(),
-    couponCode: String(order.couponCode || "").trim().toUpperCase(),
+    notes: String(
+      order.notes || order.customerNotes || order.message || "",
+    ).trim(),
+    couponCode: String(order.couponCode || "")
+      .trim()
+      .toUpperCase(),
     items,
     subtotal,
     shipping,
@@ -109,12 +146,23 @@ export const canonicalizeOrder = (order) => {
   };
 };
 
-export const applyOrderStatus = (order, nextStatus, extraUpdates = {}, changedAt = new Date().toISOString()) => {
+export const applyOrderStatus = (
+  order,
+  nextStatus,
+  extraUpdates = {},
+  changedAt = new Date().toISOString(),
+) => {
   const baseOrder = canonicalizeOrder(order);
   const normalizedNextStatus = normalizeStatusValue(nextStatus);
-  const history = Array.isArray(baseOrder.statusHistory) ? [...baseOrder.statusHistory] : [];
+  const history = Array.isArray(baseOrder.statusHistory)
+    ? [...baseOrder.statusHistory]
+    : [];
 
-  if (!history.some((entry) => normalizeStatusValue(entry.status) === normalizedNextStatus)) {
+  if (
+    !history.some(
+      (entry) => normalizeStatusValue(entry.status) === normalizedNextStatus,
+    )
+  ) {
     history.push({ status: normalizedNextStatus, at: changedAt });
   }
 
@@ -188,7 +236,10 @@ export const INITIAL_SEED_ORDERS = [
     },
     orderStatus: "CONFIRMED",
     statusHistory: [
-      { status: "PENDING", at: new Date(Date.now() - 3600000 * 2).toISOString() },
+      {
+        status: "PENDING",
+        at: new Date(Date.now() - 3600000 * 2).toISOString(),
+      },
       { status: "CONFIRMED", at: new Date(Date.now() - 3600000).toISOString() },
     ],
     cancellation: { cancelled: false, reason: "", cancelledAt: null },
@@ -240,7 +291,10 @@ export const INITIAL_SEED_ORDERS = [
     },
     orderStatus: "PENDING",
     statusHistory: [
-      { status: "PENDING", at: new Date(Date.now() - 3600000 * 4).toISOString() },
+      {
+        status: "PENDING",
+        at: new Date(Date.now() - 3600000 * 4).toISOString(),
+      },
     ],
     cancellation: { cancelled: false, reason: "", cancelledAt: null },
   },
@@ -292,7 +346,10 @@ export const INITIAL_SEED_ORDERS = [
     orderStatus: "SHIPPED",
     statusHistory: [
       { status: "PENDING", at: new Date(Date.now() - 86400000).toISOString() },
-      { status: "CONFIRMED", at: new Date(Date.now() - 72000000).toISOString() },
+      {
+        status: "CONFIRMED",
+        at: new Date(Date.now() - 72000000).toISOString(),
+      },
       { status: "SHIPPED", at: new Date(Date.now() - 36000000).toISOString() },
     ],
     cancellation: { cancelled: false, reason: "", cancelledAt: null },
@@ -353,10 +410,19 @@ export const INITIAL_SEED_ORDERS = [
     },
     orderStatus: "DELIVERED",
     statusHistory: [
-      { status: "PENDING", at: new Date(Date.now() - 86400000 * 2).toISOString() },
-      { status: "CONFIRMED", at: new Date(Date.now() - 86400000 * 2 + 1800000).toISOString() },
+      {
+        status: "PENDING",
+        at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      },
+      {
+        status: "CONFIRMED",
+        at: new Date(Date.now() - 86400000 * 2 + 1800000).toISOString(),
+      },
       { status: "SHIPPED", at: new Date(Date.now() - 86400000).toISOString() },
-      { status: "DELIVERED", at: new Date(Date.now() - 3600000 * 5).toISOString() },
+      {
+        status: "DELIVERED",
+        at: new Date(Date.now() - 3600000 * 5).toISOString(),
+      },
     ],
     cancellation: { cancelled: false, reason: "", cancelledAt: null },
   },
@@ -407,7 +473,10 @@ export const INITIAL_SEED_ORDERS = [
     },
     orderStatus: "PENDING",
     statusHistory: [
-      { status: "PENDING", at: new Date(Date.now() - 3600000 * 8).toISOString() },
+      {
+        status: "PENDING",
+        at: new Date(Date.now() - 3600000 * 8).toISOString(),
+      },
     ],
     cancellation: { cancelled: false, reason: "", cancelledAt: null },
   },
@@ -458,9 +527,8 @@ export const getOrderById = (orderId) =>
   getOrders().find((order) => order.id === orderId) || null;
 
 export const generateOrderId = (orders = getOrders(), date = new Date()) => {
-  const fiscalYearStart = date.getMonth() >= 3
-    ? date.getFullYear()
-    : date.getFullYear() - 1;
+  const fiscalYearStart =
+    date.getMonth() >= 3 ? date.getFullYear() : date.getFullYear() - 1;
   const fiscalYear = `${String(fiscalYearStart).slice(-2)}-${String(
     fiscalYearStart + 1,
   ).slice(-2)}`;
@@ -472,9 +540,8 @@ export const generateOrderId = (orders = getOrders(), date = new Date()) => {
   }, 0);
   let lastIssuedSequence = 0;
   try {
-    lastIssuedSequence = Number(
-      window.localStorage.getItem(ORDER_SEQUENCE_KEY),
-    ) || 0;
+    lastIssuedSequence =
+      Number(window.localStorage.getItem(ORDER_SEQUENCE_KEY)) || 0;
   } catch {
     lastIssuedSequence = 0;
   }
@@ -490,13 +557,16 @@ export const generateOrderId = (orders = getOrders(), date = new Date()) => {
 
 export const calculateOrderTotals = (items = [], extras = {}) => {
   const subtotal = items.reduce(
-    (sum, item) =>
-      sum + Number(item.price || 0) * Number(item.quantity || 0),
+    (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
     0,
   );
-  const shipping = Number.isFinite(Number(extras.shipping)) ? Number(extras.shipping) : 0;
+  const shipping = Number.isFinite(Number(extras.shipping))
+    ? Number(extras.shipping)
+    : 0;
   const tax = Number.isFinite(Number(extras.tax)) ? Number(extras.tax) : 0;
-  const discount = Number.isFinite(Number(extras.discount)) ? Math.max(0, Number(extras.discount)) : 0;
+  const discount = Number.isFinite(Number(extras.discount))
+    ? Math.max(0, Number(extras.discount))
+    : 0;
 
   return {
     subtotal,

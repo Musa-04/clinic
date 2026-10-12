@@ -17,12 +17,15 @@ const OrderSuccess = ({ orderId, onNavigate }) => {
               Order Placed Successfully
             </h1>
             <p className="mt-3 text-sm leading-6 text-stone-400">
-              Your order has been saved. Payment was submitted and is pending verification.
+              Your order has been saved. Payment was submitted and is pending
+              verification.
             </p>
             <div className="mt-7 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-left sm:grid-cols-3">
               <div>
                 <p className="text-xs text-stone-500">Order ID</p>
-                <p className="mt-1 break-all text-sm font-semibold text-white">{order.id}</p>
+                <p className="mt-1 text-sm font-semibold break-all text-white">
+                  {order.id}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-stone-500">Order Date</p>
@@ -44,22 +47,24 @@ const OrderSuccess = ({ orderId, onNavigate }) => {
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={() => onNavigate(`/orders/${encodeURIComponent(order.id)}`)}
-                className="min-h-12 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                onClick={() =>
+                  onNavigate(`/orders/${encodeURIComponent(order.id)}`)
+                }
+                className="min-h-12 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none"
               >
                 View Order Details
               </button>
               <button
                 type="button"
                 onClick={() => onNavigate("/#medicines")}
-                className="min-h-12 rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-stone-200 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                className="min-h-12 rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-stone-200 transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none"
               >
                 Continue Shopping
               </button>
               <button
                 type="button"
                 onClick={() => onNavigate("/orders")}
-                className="min-h-12 rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-stone-200 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                className="min-h-12 rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-stone-200 transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none"
               >
                 Order History
               </button>
@@ -68,7 +73,9 @@ const OrderSuccess = ({ orderId, onNavigate }) => {
         ) : (
           <>
             <h1 className="text-2xl font-bold text-white">Order Not Found</h1>
-            <p className="mt-3 text-sm text-stone-400">This order is not available in this browser.</p>
+            <p className="mt-3 text-sm text-stone-400">
+              This order is not available in this browser.
+            </p>
             <button
               type="button"
               onClick={() => onNavigate("/orders")}

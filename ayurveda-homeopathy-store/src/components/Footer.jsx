@@ -1,148 +1,211 @@
-import React from 'react';
-import { Leaf, Mail, Phone, MapPin, Clock, ArrowUpRight, ShieldCheck } from 'lucide-react';
+import React from "react";
+import {
+  Leaf,
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  ArrowUpRight,
+  ShieldCheck,
+} from "lucide-react";
 
-const Footer = () => {
-    const currentYear = new Date().getFullYear();
+const Footer = ({ onNavigate }) => {
+  const currentYear = new Date().getFullYear();
 
-    const quickLinks = [
-        { name: 'Home', href: '#home' },
-        { name: 'What We Treat', href: '#treatments' },
-        { name: 'Meet Our Doctors', href: '#doctors' },
-        { name: 'Contact', href: '#contact' },
-    ];
+  const handleSectionClick = (event, hash) => {
+    event.preventDefault();
+    if (onNavigate) {
+      onNavigate(`/#${hash}`);
+    } else {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
-    const treatments = [
-        { name: 'Digestive & IBS Care', href: '#treatments' },
-        { name: 'Skin & Hair Therapies', href: '#treatments' },
-        { name: 'Joint & Muscle Relief', href: '#treatments' },
-        { name: 'PCOD / PCOS Management', href: '#treatments' },
-        { name: 'Respiratory & Sinus', href: '#treatments' },
-    ];
+  const handleHomeClick = (event) => {
+    event.preventDefault();
+    if (onNavigate) {
+      onNavigate("/");
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
-    return (
-        <footer className="bg-stone-900 text-stone-300 pt-12 sm:pt-16 pb-8 sm:pb-12 border-t border-stone-800 relative overflow-hidden w-full max-w-full">
-            {/* Decorative Background Accent */}
-            <div className="absolute top-0 right-0 w-80 h-80 sm:w-96 sm:h-96 bg-emerald-900/10 rounded-full blur-3xl pointer-events-none" />
+  const handleAdminClick = (event) => {
+    event.preventDefault();
+    if (onNavigate) {
+      onNavigate("/admin/login");
+    } else {
+      window.location.assign("/admin/login");
+    }
+  };
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  const quickLinks = [
+    { name: "Home", hash: "home", onClick: handleHomeClick },
+    { name: "What We Treat", hash: "treatments" },
+    { name: "Meet Our Doctors", hash: "doctors" },
+    { name: "Contact", hash: "contact" },
+  ];
 
-                {/* Main Footer Layout - Mobile: Vertical Stack (grid-cols-1), Desktop: Multi-column (lg:grid-cols-12) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 sm:gap-10 pb-10 sm:pb-12 border-b border-stone-800 text-left">
+  const treatments = [
+    { name: "Digestive & IBS Care", hash: "treatments" },
+    { name: "Skin & Hair Therapies", hash: "treatments" },
+    { name: "Joint & Muscle Relief", hash: "treatments" },
+    { name: "PCOD / PCOS Management", hash: "treatments" },
+    { name: "Respiratory & Sinus", hash: "treatments" },
+  ];
 
-                    {/* Brand Info */}
-                    <div className="lg:col-span-4 space-y-4 sm:space-y-5">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shrink-0">
-                                <Leaf className="w-5 h-5 text-emerald-100 fill-emerald-100/20" />
-                            </div>
-                            <span className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                                Malik's <span className="text-emerald-500">Polyclinic</span>
-                            </span>
-                        </div>
+  return (
+    <footer className="relative w-full max-w-full overflow-hidden border-t border-stone-800 bg-stone-900 pt-12 pb-8 text-stone-300 sm:pt-16 sm:pb-12">
+      {/* Decorative Background Accent */}
+      <div className="pointer-events-none absolute top-0 right-0 h-80 w-80 rounded-full bg-emerald-900/10 blur-3xl sm:h-96 sm:w-96" />
 
-                        <p className="text-stone-400 text-xs sm:text-sm leading-relaxed max-w-sm">
-                            Providing compassionate, personalized Homeopathic and Ayurvedic healthcare. Led by Dr. Mozim Malik (BHMS, CCH) and Dr. Karishma Malik (BAMS, YIC).
-                        </p>
-
-                        <div className="pt-1">
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-800/50 text-emerald-400 text-xs font-medium max-w-full">
-                                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                                <span className="truncate">BHMS & BAMS Certified Doctors</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Quick Links */}
-                    <div className="lg:col-span-3 space-y-3 sm:space-y-4">
-                        <h3 className="text-white text-sm sm:text-base font-semibold tracking-wide uppercase sm:normal-case">
-                            Quick Links
-                        </h3>
-                        <ul className="space-y-3 sm:space-y-2.5 text-xs sm:text-sm">
-                            {quickLinks.map((link) => (
-                                <li key={link.name}>
-                                    <a
-                                        href={link.href}
-                                        className="hover:text-emerald-400 transition-colors duration-200 inline-flex items-center gap-1 min-h-[36px] sm:min-h-0 items-center text-stone-300"
-                                    >
-                                        <span>{link.name}</span>
-                                        <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Key Treatments */}
-                    <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-                        <h3 className="text-white text-sm sm:text-base font-semibold tracking-wide uppercase sm:normal-case">
-                            Specialties
-                        </h3>
-                        <ul className="space-y-3 sm:space-y-2.5 text-xs sm:text-sm">
-                            {treatments.map((t) => (
-                                <li key={t.name}>
-                                    <a href={t.href} className="hover:text-emerald-400 transition-colors duration-200 block py-1 text-stone-300">
-                                        {t.name}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Contact Information */}
-                    <div className="lg:col-span-3 space-y-3 sm:space-y-4">
-                        <h3 className="text-white text-sm sm:text-base font-semibold tracking-wide uppercase sm:normal-case">
-                            Contact Information
-                        </h3>
-                        <ul className="space-y-3 text-xs sm:text-sm">
-                            <li className="flex items-start gap-3 text-stone-400">
-                                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
-                                <span>Malik's Polyclinic, Natural Healthcare Hub</span>
-                            </li>
-                            <li className="flex items-center gap-3 text-stone-400">
-                                <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
-                                <a href="#contact" className="hover:text-emerald-400 transition-colors py-1">
-                                    Contact Clinic Doctor
-                                </a>
-                            </li>
-                            <li className="flex items-center gap-3 text-stone-400">
-                                <Mail className="w-4 h-4 text-emerald-500 shrink-0" />
-                                <a href="mailto:info@malikspolyclinic.com" className="hover:text-emerald-400 transition-colors py-1 truncate">
-                                    info@malikspolyclinic.com
-                                </a>
-                            </li>
-                            <li className="flex items-center gap-3 text-stone-400 pt-1">
-                                <Clock className="w-4 h-4 text-emerald-500 shrink-0" />
-                                <span>Mon - Sat: 9:00 AM - 7:00 PM</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                </div>
-
-                {/* Bottom Bar */}
-                <div className="pt-6 sm:pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-stone-500 text-center md:text-left">
-                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-                        <p>© {currentYear} Malik's Polyclinic. All rights reserved.</p>
-                        <span className="hidden sm:inline text-stone-700">•</span>
-                        <p className="text-stone-400 font-medium">
-                            Designed & Developed with <span className="text-rose-500 animate-pulse">♥</span> by <strong className="text-white font-bold tracking-wide">Musa</strong>
-                        </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-                        <a href="/admin/login" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors py-1 inline-flex items-center gap-1">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>Admin Portal</span>
-                        </a>
-                        <a href="#" className="hover:text-stone-300 transition-colors py-1">Privacy Policy</a>
-                        <a href="#" className="hover:text-stone-300 transition-colors py-1">Terms of Service</a>
-                        <a href="#" className="hover:text-stone-300 transition-colors py-1">Medical Disclaimer</a>
-                    </div>
-                </div>
-
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Main Footer Layout - Mobile: Vertical Stack (grid-cols-1), Desktop: Multi-column (lg:grid-cols-12) */}
+        <div className="grid grid-cols-1 gap-8 border-b border-stone-800 pb-10 text-left sm:gap-10 sm:pb-12 md:grid-cols-2 lg:grid-cols-12">
+          {/* Brand Info */}
+          <div className="space-y-4 sm:space-y-5 lg:col-span-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
+                <Leaf className="h-5 w-5 fill-emerald-100/20 text-emerald-100" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-white sm:text-2xl">
+                Malik's <span className="text-emerald-500">Polyclinic</span>
+              </span>
             </div>
-        </footer>
-    );
+
+            <p className="max-w-sm text-xs leading-relaxed text-stone-400 sm:text-sm">
+              Providing compassionate, personalized Homeopathic and Ayurvedic
+              healthcare. Led by Dr. Mozim Malik (BHMS, CCH) and Dr. Karishma
+              Malik (BAMS, YIC).
+            </p>
+
+            <div className="pt-1">
+              <div className="inline-flex max-w-full items-center gap-2 rounded-lg border border-emerald-800/50 bg-emerald-950/80 px-3 py-1.5 text-xs font-medium text-emerald-400">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
+                <span className="truncate">BHMS & BAMS Certified Doctors</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div className="space-y-3 sm:space-y-4 lg:col-span-3">
+            <h3 className="text-sm font-semibold tracking-wide text-white uppercase sm:text-base sm:normal-case">
+              Quick Links
+            </h3>
+            <ul className="space-y-3 text-xs sm:space-y-2.5 sm:text-sm">
+              {quickLinks.map((link) => (
+                <li key={link.name}>
+                  <a
+                    href={link.onClick ? "/" : `#${link.hash}`}
+                    onClick={(event) =>
+                      link.onClick
+                        ? link.onClick(event)
+                        : handleSectionClick(event, link.hash)
+                    }
+                    className="inline-flex min-h-9 items-center gap-1 text-stone-300 transition-colors duration-200 hover:text-emerald-400 sm:min-h-0"
+                  >
+                    <span>{link.name}</span>
+                    <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Key Treatments */}
+          <div className="space-y-3 sm:space-y-4 lg:col-span-2">
+            <h3 className="text-sm font-semibold tracking-wide text-white uppercase sm:text-base sm:normal-case">
+              Specialties
+            </h3>
+            <ul className="space-y-3 text-xs sm:space-y-2.5 sm:text-sm">
+              {treatments.map((t) => (
+                <li key={t.name}>
+                  <a
+                    href={`#${t.hash}`}
+                    onClick={(event) => handleSectionClick(event, t.hash)}
+                    className="block py-1 text-stone-300 transition-colors duration-200 hover:text-emerald-400"
+                  >
+                    {t.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Information */}
+          <div className="space-y-3 sm:space-y-4 lg:col-span-3">
+            <h3 className="text-sm font-semibold tracking-wide text-white uppercase sm:text-base sm:normal-case">
+              Contact Information
+            </h3>
+            <ul className="space-y-3 text-xs sm:text-sm">
+              <li className="flex items-start gap-3 text-stone-400">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500 sm:h-5 sm:w-5" />
+                <span>Somwar Peth, Chikodi - 591201</span>
+              </li>
+              <li className="flex items-center gap-3 text-stone-400">
+                <Phone className="h-4 w-4 shrink-0 text-emerald-500" />
+                <a
+                  href="#contact"
+                  onClick={(event) => handleSectionClick(event, "contact")}
+                  className="py-1 transition-colors hover:text-emerald-400"
+                >
+                  Contact Clinic Doctor
+                </a>
+              </li>
+              <li className="flex items-center gap-3 text-stone-400">
+                <Mail className="h-4 w-4 shrink-0 text-emerald-500" />
+                <a
+                  href="mailto:info@malikspolyclinic.com"
+                  className="truncate py-1 transition-colors hover:text-emerald-400"
+                >
+                  info@malikspolyclinic.com
+                </a>
+              </li>
+              <li className="flex items-center gap-3 pt-1 text-stone-400">
+                <Clock className="h-4 w-4 shrink-0 text-emerald-500" />
+                <span>Mon - Sat: 9:00 AM - 7:00 PM</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="flex flex-col items-center justify-between gap-4 pt-6 text-center text-xs text-stone-500 sm:pt-8 md:flex-row md:text-left">
+          <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
+            <p>© {currentYear} Malik's Polyclinic. All rights reserved.</p>
+            <span className="hidden text-stone-700 sm:inline">•</span>
+            <p className="font-medium text-stone-400">
+              Designed & Developed with{" "}
+              <span className="animate-pulse text-rose-500">♥</span> by{" "}
+              <strong className="font-bold tracking-wide text-white">
+                Musa
+              </strong>
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+            <a
+              href="/admin/login"
+              onClick={handleAdminClick}
+              className="inline-flex items-center gap-1 py-1 font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Admin Portal</span>
+            </a>
+            <a href="#" className="py-1 transition-colors hover:text-stone-300">
+              Privacy Policy
+            </a>
+            <a href="#" className="py-1 transition-colors hover:text-stone-300">
+              Terms of Service
+            </a>
+            <a href="#" className="py-1 transition-colors hover:text-stone-300">
+              Medical Disclaimer
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 };
 
 export default Footer;

@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getProducts } from '../utils/productStorage';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { getProducts } from "../utils/productStorage";
 
-const STORAGE_KEY = 'maliks_polyclinic_cart';
+const STORAGE_KEY = "maliks_polyclinic_cart";
 
 const CartContext = createContext(null);
 
@@ -31,7 +31,7 @@ export const CartProvider = ({ children }) => {
         }
       }
     } catch (e) {
-      console.warn('Failed to load cart from localStorage', e);
+      console.warn("Failed to load cart from localStorage", e);
       setItems([]);
     }
   }, []);
@@ -42,23 +42,28 @@ export const CartProvider = ({ children }) => {
         const currentProducts = new Map(
           getProducts().map((product) => [String(product.id), product]),
         );
-        setItems((currentItems) => currentItems.flatMap((item) => {
-          const currentProduct = currentProducts.get(String(item.id));
-          return currentProduct
-            ? [{ ...item, ...currentProduct, quantity: item.quantity }]
-            : [];
-        }));
+        setItems((currentItems) =>
+          currentItems.flatMap((item) => {
+            const currentProduct = currentProducts.get(String(item.id));
+            return currentProduct
+              ? [{ ...item, ...currentProduct, quantity: item.quantity }]
+              : [];
+          }),
+        );
       } catch (error) {
-        console.warn('Failed to sync cart with the product catalog', error);
+        console.warn("Failed to sync cart with the product catalog", error);
       }
     };
 
     syncCartWithProducts();
-    window.addEventListener('storage', syncCartWithProducts);
-    window.addEventListener('maliks-products-updated', syncCartWithProducts);
+    window.addEventListener("storage", syncCartWithProducts);
+    window.addEventListener("maliks-products-updated", syncCartWithProducts);
     return () => {
-      window.removeEventListener('storage', syncCartWithProducts);
-      window.removeEventListener('maliks-products-updated', syncCartWithProducts);
+      window.removeEventListener("storage", syncCartWithProducts);
+      window.removeEventListener(
+        "maliks-products-updated",
+        syncCartWithProducts,
+      );
     };
   }, []);
 
@@ -67,7 +72,7 @@ export const CartProvider = ({ children }) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch (e) {
-      console.warn('Failed to save cart to localStorage', e);
+      console.warn("Failed to save cart to localStorage", e);
     }
   }, [items]);
 
@@ -84,7 +89,14 @@ export const CartProvider = ({ children }) => {
         };
         return copy;
       }
-      return [...prev, { ...product, price: Number(product.price) || 0, quantity: Number(quantity) || 1 }];
+      return [
+        ...prev,
+        {
+          ...product,
+          price: Number(product.price) || 0,
+          quantity: Number(quantity) || 1,
+        },
+      ];
     });
   };
 
@@ -93,20 +105,36 @@ export const CartProvider = ({ children }) => {
   };
 
   const increase = (productId) => {
-    setItems((prev) => prev.map((p) => String(p.id) === String(productId) ? { ...p, quantity: Number(p.quantity || 0) + 1 } : p));
+    setItems((prev) =>
+      prev.map((p) =>
+        String(p.id) === String(productId)
+          ? { ...p, quantity: Number(p.quantity || 0) + 1 }
+          : p,
+      ),
+    );
   };
 
   const decrease = (productId) => {
-    setItems((prev) => prev
-      .map((p) => String(p.id) === String(productId) ? { ...p, quantity: Math.max(1, Number(p.quantity || 0) - 1) } : p)
+    setItems((prev) =>
+      prev.map((p) =>
+        String(p.id) === String(productId)
+          ? { ...p, quantity: Math.max(1, Number(p.quantity || 0) - 1) }
+          : p,
+      ),
     );
   };
 
   const clear = () => setItems([]);
 
-  const subtotal = items.reduce((s, it) => s + (Number(it.price || 0) * Number(it.quantity || 0)), 0);
+  const subtotal = items.reduce(
+    (s, it) => s + Number(it.price || 0) * Number(it.quantity || 0),
+    0,
+  );
 
-  const totalQuantity = items.reduce((s, it) => s + (Number(it.quantity || 0)), 0);
+  const totalQuantity = items.reduce(
+    (s, it) => s + Number(it.quantity || 0),
+    0,
+  );
 
   const open = () => setIsOpen(true);
   const close = () => setIsOpen(false);
@@ -114,26 +142,28 @@ export const CartProvider = ({ children }) => {
   const closeCheckout = () => setCheckoutOpen(false);
 
   return (
-    <CartContext.Provider value={{
-      items,
-      addItem,
-      removeItem,
-      increase,
-      decrease,
-      clear,
-      subtotal,
-      totalQuantity,
-      isOpen,
-      open,
-      close,
-      checkoutOpen,
-      openCheckout,
-      closeCheckout,
-      customerDetails,
-      setCustomerDetails,
-      checkoutPrepared,
-      setCheckoutPrepared,
-    }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        increase,
+        decrease,
+        clear,
+        subtotal,
+        totalQuantity,
+        isOpen,
+        open,
+        close,
+        checkoutOpen,
+        openCheckout,
+        closeCheckout,
+        customerDetails,
+        setCustomerDetails,
+        checkoutPrepared,
+        setCheckoutPrepared,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

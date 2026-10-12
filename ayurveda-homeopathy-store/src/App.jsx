@@ -30,7 +30,10 @@ import { saveAppointment } from "./utils/appointmentStorage";
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [catalogProducts, setCatalogProducts] = useState(products);
-  const [productCategories, setProductCategories] = useState(["Ayurvedic", "Homeopathic"]);
+  const [productCategories, setProductCategories] = useState([
+    "Ayurvedic",
+    "Homeopathic",
+  ]);
   const [catalogError, setCatalogError] = useState("");
   const { openCheckout, closeCheckout } = useCart();
 
@@ -42,12 +45,19 @@ function App() {
         setCatalogError("");
       } catch {
         setCatalogProducts([]);
-        setCatalogError("The product catalog could not be loaded from browser storage.");
+        setCatalogError(
+          "The product catalog could not be loaded from browser storage.",
+        );
       }
     };
     refreshCatalog();
     const handleStorage = (event) => {
-      if (event.key === null || event.key === "maliks_products" || event.key === "maliks_product_categories") refreshCatalog();
+      if (
+        event.key === null ||
+        event.key === "maliks_products" ||
+        event.key === "maliks_product_categories"
+      )
+        refreshCatalog();
     };
     window.addEventListener("storage", handleStorage);
     window.addEventListener("maliks-products-updated", refreshCatalog);
@@ -76,13 +86,23 @@ function App() {
     setCurrentPath(window.location.pathname);
 
     const hash = window.location.hash.slice(1);
-    window.requestAnimationFrame(() => {
-      if (hash) {
-        document.getElementById(hash)?.scrollIntoView({ behavior: "smooth" });
-      } else {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+    if (!hash) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    // The target section may not exist yet when navigating from another route,
+    // because React re-renders the home page asynchronously. Retry briefly.
+    let attempts = 0;
+    const scrollToHash = () => {
+      const target = document.getElementById(hash);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth" });
+      } else if (attempts < 20) {
+        attempts += 1;
+        window.requestAnimationFrame(scrollToHash);
       }
-    });
+    };
+    window.requestAnimationFrame(scrollToHash);
   };
 
   const productRoute = currentPath.match(/^\/products\/([^/]+)\/?$/);
@@ -99,11 +119,16 @@ function App() {
       ? decodeURIComponent(successRoute[1])
       : null;
   const isOrdersRoute = currentPath === "/orders" || currentPath === "/orders/";
-  const isAdminLoginRoute = currentPath === "/admin/login" || currentPath === "/admin/login/";
-  const isAdminSignupRoute = currentPath === "/admin/signup" || currentPath === "/admin/signup/";
-  const adminRoute = currentPath.match(/^\/admin(?:\/(dashboard|orders|appointments|products|categories|customers|analytics|reviews|coupons|settings))?\/?$/);
+  const isAdminLoginRoute =
+    currentPath === "/admin/login" || currentPath === "/admin/login/";
+  const isAdminSignupRoute =
+    currentPath === "/admin/signup" || currentPath === "/admin/signup/";
+  const adminRoute = currentPath.match(
+    /^\/admin(?:\/(dashboard|orders|appointments|products|categories|customers|analytics|reviews|coupons|settings))?\/?$/,
+  );
   const adminSection = adminRoute?.[1] || "orders";
-  const isAdminRoute = Boolean(adminRoute) && !isAdminLoginRoute && !isAdminSignupRoute;
+  const isAdminRoute =
+    Boolean(adminRoute) && !isAdminLoginRoute && !isAdminSignupRoute;
 
   const openProduct = (product) => navigate(`/products/${product.id}`);
 
@@ -156,18 +181,24 @@ function App() {
         fullName: fullName.trim(),
         phone: phone.trim(),
         email: email.trim(),
-        doctor: e.currentTarget.elements.doctor.selectedOptions[0]?.textContent || doctor,
-        concern: e.currentTarget.elements.concern.selectedOptions[0]?.textContent || concern,
+        doctor:
+          e.currentTarget.elements.doctor.selectedOptions[0]?.textContent ||
+          doctor,
+        concern:
+          e.currentTarget.elements.concern.selectedOptions[0]?.textContent ||
+          concern,
         preferredDate,
         message: messageText.trim(),
       });
     } catch {
-      setValidationError("Your appointment request could not be saved. Please check browser storage and try again.");
+      setValidationError(
+        "Your appointment request could not be saved. Please check browser storage and try again.",
+      );
       return;
     }
 
     setSuccessMessage(
-      "Your appointment request has been submitted successfully. Our clinic team will contact you soon."
+      "Your appointment request has been submitted successfully. Our clinic team will contact you soon.",
     );
 
     // Clear form
@@ -199,7 +230,7 @@ function App() {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-stone-50 font-sans text-stone-800 antialiased selection:bg-emerald-200 selection:text-emerald-900">
       {/* Navbar */}
-      <Navbar />
+      <Navbar onNavigate={navigate} />
 
       {ordersRoute ? (
         <OrderDetails orderId={orderId} onNavigate={navigate} />
@@ -216,7 +247,7 @@ function App() {
           onNavigateToProduct={(product) => openProduct(product)}
         />
       ) : (
-        <main className="w-full max-w-full flex-grow">
+        <main className="w-full max-w-full grow">
           {/* Hero */}
           <Hero />
 
@@ -230,7 +261,12 @@ function App() {
           <WhatWeTreat />
 
           {/* Products */}
-          <Products products={catalogProducts} productCategories={productCategories} catalogError={catalogError} onViewProduct={openProduct} />
+          <Products
+            products={catalogProducts}
+            productCategories={productCategories}
+            catalogError={catalogError}
+            onViewProduct={openProduct}
+          />
 
           {/* Why Choose Us */}
           <WhyChooseUs />
@@ -244,25 +280,25 @@ function App() {
           {/* Appointment */}
           <section
             id="contact"
-            className="w-full bg-gradient-to-b from-stone-100 to-emerald-950 py-14 sm:py-20"
+            className="w-full bg-linear-to-b from-stone-100 to-emerald-950 py-14 sm:py-20"
           >
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
                 {/* Left Content */}
                 <div className="flex flex-col justify-center lg:col-span-5">
-                  <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-emerald-800/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-200">
+                  <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-emerald-800/60 px-3 py-1.5 text-xs font-semibold tracking-wider text-emerald-200 uppercase">
                     <Stethoscope className="h-4 w-4 shrink-0 text-emerald-400" />
                     <span>Appointment</span>
                   </div>
 
-                  <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl">
+                  <h2 className="text-3xl leading-tight font-extrabold tracking-tight text-white sm:text-4xl">
                     Book an Appointment
                   </h2>
 
                   <p className="mt-4 max-w-lg text-sm leading-7 text-emerald-100/80 sm:text-base">
                     Schedule a consultation with our Homeopathic or Ayurvedic
-                    doctor. Share your details and health concern, and our clinic
-                    team can assist you with the next steps.
+                    doctor. Share your details and health concern, and our
+                    clinic team can assist you with the next steps.
                   </p>
 
                   <div className="mt-8 space-y-4">
@@ -343,7 +379,7 @@ function App() {
                       <div className="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                         <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
 
-                        <p className="text-sm font-medium leading-6 text-emerald-700">
+                        <p className="text-sm leading-6 font-medium text-emerald-700">
                           {successMessage}
                         </p>
                       </div>
@@ -367,7 +403,7 @@ function App() {
                             placeholder="Enter your full name"
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
-                            className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           />
                         </div>
 
@@ -386,7 +422,7 @@ function App() {
                             placeholder="+91 98765 43210"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           />
                         </div>
                       </div>
@@ -406,7 +442,7 @@ function App() {
                           placeholder="Enter your email address"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                          className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                         />
                       </div>
 
@@ -426,7 +462,7 @@ function App() {
                             name="doctor"
                             value={doctor}
                             onChange={(e) => setDoctor(e.target.value)}
-                            className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           >
                             <option value="" disabled>
                               Select a doctor
@@ -456,7 +492,7 @@ function App() {
                             name="concern"
                             value={concern}
                             onChange={(e) => setConcern(e.target.value)}
-                            className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           >
                             <option value="" disabled>
                               Select your concern
@@ -517,7 +553,7 @@ function App() {
                           type="date"
                           value={preferredDate}
                           onChange={(e) => setPreferredDate(e.target.value)}
-                          className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                          className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                         />
                       </div>
 
@@ -536,14 +572,14 @@ function App() {
                           placeholder="Tell us briefly about your concern..."
                           value={messageText}
                           onChange={(e) => setMessageText(e.target.value)}
-                          className="w-full resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                          className="w-full resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                         />
                       </div>
 
                       {/* Submit */}
                       <button
                         type="submit"
-                        className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-emerald-900/20 transition hover:bg-emerald-800 active:bg-emerald-900"
+                        className="flex min-h-12.5 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-emerald-900/20 transition hover:bg-emerald-800 active:bg-emerald-900"
                       >
                         <Stethoscope className="h-4 w-4 shrink-0" />
                         <span>Submit Appointment Request</span>
@@ -562,13 +598,15 @@ function App() {
 
       {/* Checkout */}
       <Checkout
-        onOrderPlaced={(order) => navigate(`/order-success/${encodeURIComponent(order.id)}`)}
+        onOrderPlaced={(order) =>
+          navigate(`/order-success/${encodeURIComponent(order.id)}`)
+        }
         onClose={() => navigate("/#medicines")}
         onViewOrders={() => navigate("/orders")}
       />
 
       {/* Footer */}
-      <Footer />
+      <Footer onNavigate={navigate} />
     </div>
   );
 }

@@ -46,19 +46,31 @@ const getOrderOrThrow = (orderId) => {
 const paymentForTransition = (order, expectedStatus) => {
   const payment = order.payment || {};
   if (normalizePaymentStatus(payment.status) !== expectedStatus) {
-    throw new Error(`Payment cannot be updated because its status is ${normalizePaymentStatus(payment.status).toLowerCase()}.`);
+    throw new Error(
+      `Payment cannot be updated because its status is ${normalizePaymentStatus(payment.status).toLowerCase()}.`,
+    );
   }
   return payment;
 };
 
-const persistPaymentStatus = (orderId, nextStatus, metadataKey, adminIdentity, requireTransaction = false) => {
+const persistPaymentStatus = (
+  orderId,
+  nextStatus,
+  metadataKey,
+  adminIdentity,
+  requireTransaction = false,
+) => {
   const order = getOrderOrThrow(orderId);
   const payment = paymentForTransition(order, "PENDING_VERIFICATION");
   if (requireTransaction && !String(payment.method || "").trim()) {
-    throw new Error("Cannot verify payment because the payment method is missing.");
+    throw new Error(
+      "Cannot verify payment because the payment method is missing.",
+    );
   }
   if (requireTransaction && !String(payment.transactionId || "").trim()) {
-    throw new Error("Cannot verify payment because the transaction ID is missing.");
+    throw new Error(
+      "Cannot verify payment because the transaction ID is missing.",
+    );
   }
   const changedAt = new Date().toISOString();
   const metadata = {
@@ -68,7 +80,8 @@ const persistPaymentStatus = (orderId, nextStatus, metadataKey, adminIdentity, r
   };
 
   if (adminIdentity) {
-    metadata[metadataKey === "verifiedAt" ? "verifiedBy" : "failedBy"] = adminIdentity;
+    metadata[metadataKey === "verifiedAt" ? "verifiedBy" : "failedBy"] =
+      adminIdentity;
   }
 
   return persistOrder(orderId, { payment: metadata });
@@ -89,7 +102,12 @@ const statusHistoryFor = (order, nextStatus, changedAt) => {
   return [...history, { status: nextStatus, at: changedAt }];
 };
 
-const persistStatus = (order, nextStatus, extraUpdates = {}, changedAt = new Date().toISOString()) => {
+const persistStatus = (
+  order,
+  nextStatus,
+  extraUpdates = {},
+  changedAt = new Date().toISOString(),
+) => {
   return persistOrder(order.id, {
     ...extraUpdates,
     orderStatus: nextStatus,
@@ -128,7 +146,9 @@ const localOrderAdapter = {
     }[currentStatus];
 
     if (nextStatus !== allowedNextStatus) {
-      throw new Error(`Cannot move an order from ${currentStatus} to ${nextStatus}.`);
+      throw new Error(
+        `Cannot move an order from ${currentStatus} to ${nextStatus}.`,
+      );
     }
 
     return persistStatus(order, nextStatus);
@@ -143,17 +163,28 @@ const localOrderAdapter = {
     if (!reason?.trim()) throw new Error("A cancellation reason is required.");
 
     const cancelledAt = new Date().toISOString();
-    return persistStatus(order, "CANCELLED", {
-      cancellation: {
-        cancelled: true,
-        reason: reason.trim(),
-        cancelledAt,
+    return persistStatus(
+      order,
+      "CANCELLED",
+      {
+        cancellation: {
+          cancelled: true,
+          reason: reason.trim(),
+          cancelledAt,
+        },
       },
-    }, cancelledAt);
+      cancelledAt,
+    );
   },
 
   async verifyPayment(orderId, adminIdentity) {
-    return persistPaymentStatus(orderId, "VERIFIED", "verifiedAt", adminIdentity, true);
+    return persistPaymentStatus(
+      orderId,
+      "VERIFIED",
+      "verifiedAt",
+      adminIdentity,
+      true,
+    );
   },
 
   async failPayment(orderId, adminIdentity) {

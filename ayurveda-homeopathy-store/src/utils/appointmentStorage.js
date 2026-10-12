@@ -15,7 +15,8 @@ export const INITIAL_SEED_APPOINTMENTS = [
     doctor: "Dr. Mozim Malik (Homeopath)",
     concern: "Chronic Joint Pain & Knee Stiffness",
     preferredDate: "2026-10-14",
-    message: "Suffering from severe knee pain while climbing stairs for 3 months.",
+    message:
+      "Suffering from severe knee pain while climbing stairs for 3 months.",
     status: "PENDING",
     createdAt: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 hours ago
     attendedAt: null,
@@ -29,7 +30,8 @@ export const INITIAL_SEED_APPOINTMENTS = [
     doctor: "Dr. Ayesha Khan (Ayurvedic Specialist)",
     concern: "Skin Allergy, Rashes & Itching",
     preferredDate: "2026-10-15",
-    message: "Seasonal itching and skin flare-ups. Need natural homeopathic care.",
+    message:
+      "Seasonal itching and skin flare-ups. Need natural homeopathic care.",
     status: "PENDING",
     createdAt: new Date(Date.now() - 3600000 * 12).toISOString(), // 12 hours ago
     attendedAt: null,
@@ -47,7 +49,8 @@ export const INITIAL_SEED_APPOINTMENTS = [
     status: "ATTENDED",
     createdAt: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
     attendedAt: new Date(Date.now() - 86400000 * 1).toISOString(), // 1 day ago
-    notes: "Patient consulted in clinic. Prescribed Herbal Digestive drops. Follow-up after 15 days.",
+    notes:
+      "Patient consulted in clinic. Prescribed Herbal Digestive drops. Follow-up after 15 days.",
   },
 ];
 
@@ -66,7 +69,9 @@ export const seedDefaultAppointments = () => {
 
 export const getAppointments = () => {
   if (typeof window === "undefined") return INITIAL_SEED_APPOINTMENTS;
-  const storedAppointments = window.localStorage.getItem(APPOINTMENTS_STORAGE_KEY);
+  const storedAppointments = window.localStorage.getItem(
+    APPOINTMENTS_STORAGE_KEY,
+  );
   if (!storedAppointments) {
     return seedDefaultAppointments();
   }
@@ -115,13 +120,18 @@ export const updateAppointmentStatus = (id, nextStatus, notes = "") => {
   const updated = {
     ...current,
     status: nextStatus,
-    attendedAt: isAttended ? current.attendedAt || new Date().toISOString() : null,
+    attendedAt: isAttended
+      ? current.attendedAt || new Date().toISOString()
+      : null,
     notes: notes !== undefined ? notes : current.notes,
     updatedAt: new Date().toISOString(),
   };
 
   appointments[index] = updated;
-  window.localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(appointments));
+  window.localStorage.setItem(
+    APPOINTMENTS_STORAGE_KEY,
+    JSON.stringify(appointments),
+  );
   notifyAppointmentChange();
   return updated;
 };
@@ -129,7 +139,10 @@ export const updateAppointmentStatus = (id, nextStatus, notes = "") => {
 export const deleteAppointment = (id) => {
   const appointments = getAppointments();
   const filtered = appointments.filter((apt) => apt.id !== id);
-  window.localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(filtered));
+  window.localStorage.setItem(
+    APPOINTMENTS_STORAGE_KEY,
+    JSON.stringify(filtered),
+  );
   notifyAppointmentChange();
   return true;
 };

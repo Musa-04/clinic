@@ -126,8 +126,13 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
     0,
   );
   const discount = calculateCouponDiscount(itemSubtotal, appliedCoupon);
-  const { subtotal: calculatedSubtotal, shipping, tax, discount: orderDiscount, total: totalAmount } =
-    calculateOrderTotals(items, { shipping: shippingFee, discount });
+  const {
+    subtotal: calculatedSubtotal,
+    shipping,
+    tax,
+    discount: orderDiscount,
+    total: totalAmount,
+  } = calculateOrderTotals(items, { shipping: shippingFee, discount });
   const isFreeDelivery = shipping === 0;
 
   // --------------------------------------------------
@@ -144,7 +149,8 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
     };
     readShippingFee();
     const onStorage = (event) => {
-      if (event.key === null || event.key === "maliks_clinic_settings") readShippingFee();
+      if (event.key === null || event.key === "maliks_clinic_settings")
+        readShippingFee();
     };
     window.addEventListener("storage", onStorage);
     window.addEventListener("maliks-settings-updated", readShippingFee);
@@ -296,7 +302,9 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
       }, 2000);
     } catch {
       setCopied(false);
-      setCopyError("Copy is unavailable. Select the UPI ID to copy it manually.");
+      setCopyError(
+        "Copy is unavailable. Select the UPI ID to copy it manually.",
+      );
     }
   };
 
@@ -305,11 +313,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
   // --------------------------------------------------
 
   const handlePaymentContinue = () => {
-    if (
-      paymentMethod !== "upi" ||
-      !paymentConfirmed ||
-      !transactionId.trim()
-    ) {
+    if (paymentMethod !== "upi" || !paymentConfirmed || !transactionId.trim()) {
       return;
     }
 
@@ -419,9 +423,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
         <div className="w-full max-w-md rounded-2xl border border-white/10 bg-neutral-900 p-8 text-center shadow-2xl">
-          <h2 className="text-2xl font-bold text-white">
-            Your cart is empty
-          </h2>
+          <h2 className="text-2xl font-bold text-white">Your cart is empty</h2>
 
           <p className="mt-2 text-sm text-stone-400">
             Add a product to your cart before proceeding to checkout.
@@ -433,7 +435,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
               closeCheckout();
               onClose?.();
             }}
-            className="mt-6 min-h-12 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+            className="mt-6 min-h-12 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none"
           >
             Back to Products
           </button>
@@ -464,7 +466,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
             </p>
 
             <div className="mx-auto mt-6 max-w-sm rounded-2xl border border-white/10 bg-neutral-950 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+              <p className="text-xs font-semibold tracking-wider text-stone-500 uppercase">
                 Order Number
               </p>
 
@@ -474,9 +476,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
               <div className="mt-4 border-t border-stone-200 pt-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-stone-400">
-                    Total
-                  </span>
+                  <span className="text-stone-400">Total</span>
 
                   <span className="font-bold text-white">
                     ₹{totalAmount.toLocaleString("en-IN")}
@@ -486,8 +486,8 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
             </div>
 
             <p className="mt-6 text-sm leading-6 text-stone-500">
-              Your order details and payment information have been recorded.
-              Our team will process your order.
+              Your order details and payment information have been recorded. Our
+              team will process your order.
             </p>
 
             <button
@@ -519,7 +519,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60">
-      <div className="min-h-full bg-neutral-950 text-stone-100 [&_.bg-white]:bg-neutral-900 [&_.bg-stone-50]:bg-neutral-950 [&_.bg-stone-100]:bg-neutral-800 [&_.border-stone-200]:border-white/10 [&_.border-stone-300]:border-white/15 [&_.text-stone-900]:text-white [&_.text-stone-800]:text-stone-100 [&_.text-stone-700]:text-stone-200 [&_.text-stone-600]:text-stone-300 [&_.text-stone-500]:text-stone-400 [&_.text-emerald-700]:text-emerald-300 [&_.bg-emerald-100]:bg-emerald-400/10 [&_input]:bg-neutral-950 [&_textarea]:bg-neutral-950 [&_input]:text-white [&_textarea]:text-white">
+      <div className="min-h-full bg-neutral-950 text-stone-100 [&_.bg-emerald-100]:bg-emerald-400/10 [&_.bg-stone-100]:bg-neutral-800 [&_.bg-stone-50]:bg-neutral-950 [&_.bg-white]:bg-neutral-900 [&_.border-stone-200]:border-white/10 [&_.border-stone-300]:border-white/15 [&_.text-emerald-700]:text-emerald-300 [&_.text-stone-500]:text-stone-400 [&_.text-stone-600]:text-stone-300 [&_.text-stone-700]:text-stone-200 [&_.text-stone-800]:text-stone-100 [&_.text-stone-900]:text-white [&_input]:bg-neutral-950 [&_input]:text-white [&_textarea]:bg-neutral-950 [&_textarea]:text-white">
         {/* ==================================================
             HEADER
         ================================================== */}
@@ -534,9 +534,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
               >
                 <ArrowLeft className="h-4 w-4" />
 
-                {currentStep === 1
-                  ? "Back to Cart"
-                  : "Back"}
+                {currentStep === 1 ? "Back to Cart" : "Back"}
               </button>
 
               <div className="flex items-center gap-2 text-xs font-semibold text-stone-500">
@@ -558,23 +556,19 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
               <div className="flex items-center gap-2">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${currentStep >= 1
-                    ? "bg-emerald-600 text-white"
-                    : "border border-stone-300 text-stone-500"
-                    }`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+                    currentStep >= 1
+                      ? "bg-emerald-600 text-white"
+                      : "border border-stone-300 text-stone-500"
+                  }`}
                 >
-                  {currentStep > 1 ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    "1"
-                  )}
+                  {currentStep > 1 ? <Check className="h-4 w-4" /> : "1"}
                 </div>
 
                 <span
-                  className={`hidden text-sm font-semibold sm:block ${currentStep >= 1
-                    ? "text-stone-900"
-                    : "text-stone-500"
-                    }`}
+                  className={`hidden text-sm font-semibold sm:block ${
+                    currentStep >= 1 ? "text-stone-900" : "text-stone-500"
+                  }`}
                 >
                   Delivery Details
                 </span>
@@ -586,23 +580,19 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
               <div className="flex items-center gap-2">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${currentStep >= 2
-                    ? "bg-emerald-600 text-white"
-                    : "border border-stone-300 text-stone-500"
-                    }`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+                    currentStep >= 2
+                      ? "bg-emerald-600 text-white"
+                      : "border border-stone-300 text-stone-500"
+                  }`}
                 >
-                  {currentStep > 2 ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    "2"
-                  )}
+                  {currentStep > 2 ? <Check className="h-4 w-4" /> : "2"}
                 </div>
 
                 <span
-                  className={`hidden text-sm font-semibold sm:block ${currentStep >= 2
-                    ? "text-stone-900"
-                    : "text-stone-500"
-                    }`}
+                  className={`hidden text-sm font-semibold sm:block ${
+                    currentStep >= 2 ? "text-stone-900" : "text-stone-500"
+                  }`}
                 >
                   Payment Details
                 </span>
@@ -614,19 +604,19 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
               <div className="flex items-center gap-2">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${currentStep >= 3
-                    ? "bg-emerald-600 text-white"
-                    : "border border-stone-300 text-stone-500"
-                    }`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+                    currentStep >= 3
+                      ? "bg-emerald-600 text-white"
+                      : "border border-stone-300 text-stone-500"
+                  }`}
                 >
                   3
                 </div>
 
                 <span
-                  className={`hidden text-sm font-semibold sm:block ${currentStep >= 3
-                    ? "text-stone-900"
-                    : "text-stone-500"
-                    }`}
+                  className={`hidden text-sm font-semibold sm:block ${
+                    currentStep >= 3 ? "text-stone-900" : "text-stone-500"
+                  }`}
                 >
                   Review Order
                 </span>
@@ -668,14 +658,11 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     </div>
                   </div>
 
-                  <form
-                    onSubmit={handleDeliverySubmit}
-                    className="space-y-6"
-                  >
+                  <form onSubmit={handleDeliverySubmit} className="space-y-6">
                     {/* Customer Details */}
 
                     <div>
-                      <h2 className="mb-4 border-b border-stone-200 pb-3 text-sm font-bold uppercase tracking-wider text-stone-800">
+                      <h2 className="mb-4 border-b border-stone-200 pb-3 text-sm font-bold tracking-wider text-stone-800 uppercase">
                         Customer Details
                       </h2>
 
@@ -695,13 +682,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                             type="text"
                             value={form.fullName}
                             onChange={(e) =>
-                              handleChange(
-                                "fullName",
-                                e.target.value
-                              )
+                              handleChange("fullName", e.target.value)
                             }
                             placeholder="Enter your full name"
-                            className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           />
 
                           {errors.fullName && (
@@ -726,13 +710,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                             type="tel"
                             value={form.phone}
                             onChange={(e) =>
-                              handleChange(
-                                "phone",
-                                e.target.value
-                              )
+                              handleChange("phone", e.target.value)
                             }
                             placeholder="+91 98765 43210"
-                            className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           />
 
                           {errors.phone && (
@@ -757,13 +738,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                             type="email"
                             value={form.email}
                             onChange={(e) =>
-                              handleChange(
-                                "email",
-                                e.target.value
-                              )
+                              handleChange("email", e.target.value)
                             }
                             placeholder="Enter your email address"
-                            className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           />
 
                           {errors.email && (
@@ -778,7 +756,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     {/* Delivery Details */}
 
                     <div>
-                      <h2 className="mb-4 border-b border-stone-200 pb-3 text-sm font-bold uppercase tracking-wider text-stone-800">
+                      <h2 className="mb-4 border-b border-stone-200 pb-3 text-sm font-bold tracking-wider text-stone-800 uppercase">
                         Delivery Details
                       </h2>
 
@@ -798,13 +776,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                             rows={4}
                             value={form.address}
                             onChange={(e) =>
-                              handleChange(
-                                "address",
-                                e.target.value
-                              )
+                              handleChange("address", e.target.value)
                             }
                             placeholder="Enter your complete delivery address"
-                            className="w-full resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            className="w-full resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           />
 
                           {errors.address && (
@@ -834,14 +809,11 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                               onChange={(e) =>
                                 handleChange(
                                   "pincode",
-                                  e.target.value.replace(
-                                    /\D/g,
-                                    ""
-                                  )
+                                  e.target.value.replace(/\D/g, ""),
                                 )
                               }
                               placeholder="Enter your pin code"
-                              className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                              className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                             />
 
                             {errors.pincode && (
@@ -864,13 +836,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                               type="text"
                               value={form.city}
                               onChange={(e) =>
-                                handleChange(
-                                  "city",
-                                  e.target.value
-                                )
+                                handleChange("city", e.target.value)
                               }
                               placeholder="Enter your city"
-                              className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                              className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                             />
 
                             {errors.city && (
@@ -897,13 +866,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                               type="text"
                               value={form.state}
                               onChange={(e) =>
-                                handleChange(
-                                  "state",
-                                  e.target.value
-                                )
+                                handleChange("state", e.target.value)
                               }
                               placeholder="Enter your state"
-                              className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                              className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                             />
 
                             {errors.state && (
@@ -926,7 +892,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                               type="text"
                               value={form.country}
                               readOnly
-                              className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-600 outline-none"
+                              className="min-h-12 w-full rounded-xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-600 outline-none"
                             />
                           </div>
                         </div>
@@ -946,13 +912,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                             rows={3}
                             value={form.message}
                             onChange={(e) =>
-                              handleChange(
-                                "message",
-                                e.target.value
-                              )
+                              handleChange("message", e.target.value)
                             }
                             placeholder="Any additional instructions for your order..."
-                            className="w-full resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            className="w-full resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           />
                         </div>
                       </div>
@@ -1020,7 +983,8 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                           </p>
 
                           <p className="mt-2 text-xs font-semibold text-stone-600">
-                            Delivery details will be confirmed after order placement.
+                            Delivery details will be confirmed after order
+                            placement.
                           </p>
                         </div>
                       </div>
@@ -1037,17 +1001,19 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("upi")}
-                      className={`w-full rounded-2xl border-2 p-5 text-left transition ${paymentMethod === "upi"
-                        ? "border-emerald-600 bg-emerald-50/40"
-                        : "border-stone-200 bg-white hover:border-stone-300"
-                        }`}
+                      className={`w-full rounded-2xl border-2 p-5 text-left transition ${
+                        paymentMethod === "upi"
+                          ? "border-emerald-600 bg-emerald-50/40"
+                          : "border-stone-200 bg-white hover:border-stone-300"
+                      }`}
                     >
                       <div className="flex items-start gap-3">
                         <div
-                          className={`mt-1 flex h-4 w-4 items-center justify-center rounded-full border-2 ${paymentMethod === "upi"
-                            ? "border-emerald-600"
-                            : "border-stone-400"
-                            }`}
+                          className={`mt-1 flex h-4 w-4 items-center justify-center rounded-full border-2 ${
+                            paymentMethod === "upi"
+                              ? "border-emerald-600"
+                              : "border-stone-400"
+                          }`}
                         >
                           {paymentMethod === "upi" && (
                             <div className="h-2 w-2 rounded-full bg-emerald-600" />
@@ -1072,11 +1038,11 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                       <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50 p-5">
                         <div className="flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+                            <p className="text-xs font-semibold tracking-wider text-stone-500 uppercase">
                               UPI ID
                             </p>
 
-                            <p className="mt-1 break-all font-bold text-stone-900">
+                            <p className="mt-1 font-bold break-all text-stone-900">
                               {CLINIC_UPI_ID}
                             </p>
                           </div>
@@ -1101,21 +1067,23 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                         </div>
 
                         {copyError && (
-                          <p role="status" className="mt-2 text-xs text-amber-700">
+                          <p
+                            role="status"
+                            className="mt-2 text-xs text-amber-700"
+                          >
                             {copyError}
                           </p>
                         )}
 
                         <div className="mt-5 rounded-xl border border-emerald-200 bg-white p-4">
                           <p className="text-sm font-semibold text-stone-800">
-                            Pay ₹
-                            {totalAmount.toLocaleString("en-IN")} using any
+                            Pay ₹{totalAmount.toLocaleString("en-IN")} using any
                             UPI app.
                           </p>
 
                           <p className="mt-2 text-xs leading-5 text-stone-500">
-                            After completing the payment, enter your
-                            transaction ID below and confirm the payment.
+                            After completing the payment, enter your transaction
+                            ID below and confirm the payment.
                           </p>
                         </div>
 
@@ -1124,7 +1092,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                             <img
                               src={clinicQrImage}
                               alt="Scan PhonePe / GooglePay / Paytm QR Code to pay Malik's Polyclinic"
-                              className="aspect-square w-48 max-w-full rounded-lg border border-stone-200 bg-white p-1 object-contain shadow-sm"
+                              className="aspect-square w-48 max-w-full rounded-lg border border-stone-200 bg-white object-contain p-1 shadow-sm"
                             />
                             <p className="mt-2 text-[11px] font-bold text-stone-700">
                               Scan with any UPI App
@@ -1136,10 +1104,28 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
                           <div className="space-y-3">
                             <ol className="list-inside list-decimal space-y-2 text-xs leading-5 text-stone-700">
-                              <li>Open any UPI app (PhonePe, Google Pay, Paytm, etc.).</li>
-                              <li>Scan the QR code or enter UPI ID <strong className="font-mono text-emerald-800">{CLINIC_UPI_ID}</strong>.</li>
-                              <li>Pay exact amount: <strong className="text-emerald-800">₹{totalAmount.toLocaleString("en-IN")}</strong>.</li>
-                              <li>Copy the 12-digit UPI Reference / UTR / Transaction ID.</li>
+                              <li>
+                                Open any UPI app (PhonePe, Google Pay, Paytm,
+                                etc.).
+                              </li>
+                              <li>
+                                Scan the QR code or enter UPI ID{" "}
+                                <strong className="font-mono text-emerald-800">
+                                  {CLINIC_UPI_ID}
+                                </strong>
+                                .
+                              </li>
+                              <li>
+                                Pay exact amount:{" "}
+                                <strong className="text-emerald-800">
+                                  ₹{totalAmount.toLocaleString("en-IN")}
+                                </strong>
+                                .
+                              </li>
+                              <li>
+                                Copy the 12-digit UPI Reference / UTR /
+                                Transaction ID.
+                              </li>
                             </ol>
 
                             {/* Important Verification Notice */}
@@ -1147,19 +1133,25 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                               <div className="flex items-start gap-2.5">
                                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-800" />
                                 <div className="space-y-1">
-                                  <p className="font-bold text-amber-950 uppercase tracking-wide text-[10.5px]">
+                                  <p className="text-[10.5px] font-bold tracking-wide text-amber-950 uppercase">
                                     Important: Verify Beneficiary Name
                                   </p>
-                                  <p className="text-stone-700 text-[11.5px] leading-relaxed">
-                                    We are an independent small healthcare clinic & pharmacy. While paying, your UPI app will display the verified account holder name:
+                                  <p className="text-[11.5px] leading-relaxed text-stone-700">
+                                    We are an independent small healthcare
+                                    clinic & pharmacy. While paying, your UPI
+                                    app will display the verified account holder
+                                    name:
                                   </p>
                                   <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-2.5 py-1 font-mono text-xs font-black text-emerald-950 shadow-2xs">
                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                                     <span>{CLINIC_ACCOUNT_HOLDER}</span>
-                                    <span className="text-[10px] font-sans font-normal text-stone-500">(State Bank of India)</span>
+                                    <span className="font-sans text-[10px] font-normal text-stone-500">
+                                      (State Bank of India)
+                                    </span>
                                   </div>
                                   <p className="text-[11px] text-stone-600">
-                                    Please verify this name on your UPI screen before confirming the payment.
+                                    Please verify this name on your UPI screen
+                                    before confirming the payment.
                                   </p>
                                 </div>
                               </div>
@@ -1181,11 +1173,9 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                             id="transaction-id"
                             type="text"
                             value={transactionId}
-                            onChange={(e) =>
-                              setTransactionId(e.target.value)
-                            }
+                            onChange={(e) => setTransactionId(e.target.value)}
                             placeholder="Enter your UPI transaction ID"
-                            className="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           />
 
                           <p className="mt-1.5 text-xs text-stone-500">
@@ -1223,7 +1213,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="min-h-[50px] rounded-xl border border-stone-300 bg-white px-6 py-3 text-sm font-bold text-stone-700 transition hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      className="min-h-12.5 rounded-xl border border-stone-300 bg-white px-6 py-3 text-sm font-bold text-stone-700 transition hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                     >
                       Back
                     </button>
@@ -1233,15 +1223,14 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                       onClick={handlePaymentContinue}
                       disabled={
                         paymentMethod === "upi" &&
-                        (!paymentConfirmed ||
-                          !transactionId.trim())
+                        (!paymentConfirmed || !transactionId.trim())
                       }
-                      className={`min-h-[50px] rounded-xl px-7 py-3 text-sm font-bold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${paymentMethod === "upi" &&
-                        (!paymentConfirmed ||
-                          !transactionId.trim())
-                        ? "cursor-not-allowed bg-stone-300"
-                        : "bg-emerald-700 hover:bg-emerald-800"
-                        }`}
+                      className={`min-h-12.5 rounded-xl px-7 py-3 text-sm font-bold text-white transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${
+                        paymentMethod === "upi" &&
+                        (!paymentConfirmed || !transactionId.trim())
+                          ? "cursor-not-allowed bg-stone-300"
+                          : "bg-emerald-700 hover:bg-emerald-800"
+                      }`}
                     >
                       Review Order
                     </button>
@@ -1276,7 +1265,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
                   <section>
                     <div className="mb-4 flex items-center justify-between border-b border-stone-200 pb-3">
-                      <h2 className="text-sm font-bold uppercase tracking-wider text-stone-800">
+                      <h2 className="text-sm font-bold tracking-wider text-stone-800 uppercase">
                         Delivery Details
                       </h2>
 
@@ -1294,7 +1283,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                         {form.fullName}
                       </p>
 
-                      <p className="mt-2 whitespace-pre-line text-sm leading-6 text-stone-600">
+                      <p className="mt-2 text-sm leading-6 whitespace-pre-line text-stone-600">
                         {form.address}
                         {"\n"}
                         {form.city}, {form.state} - {form.pincode}
@@ -1326,7 +1315,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
                   <section className="mt-8">
                     <div className="mb-4 flex items-center justify-between border-b border-stone-200 pb-3">
-                      <h2 className="text-sm font-bold uppercase tracking-wider text-stone-800">
+                      <h2 className="text-sm font-bold tracking-wider text-stone-800 uppercase">
                         Payment Method
                       </h2>
 
@@ -1351,8 +1340,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                           </p>
 
                           <p className="mt-1 text-xs text-stone-500">
-                            Transaction ID:{" "}
-                            {transactionId || "Not provided"}
+                            Transaction ID: {transactionId || "Not provided"}
                           </p>
                           <p className="mt-1 text-xs font-semibold text-amber-700">
                             Payment submitted — verification pending
@@ -1366,7 +1354,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
                   <section className="mt-8">
                     <div className="mb-4 border-b border-stone-200 pb-3">
-                      <h2 className="text-sm font-bold uppercase tracking-wider text-stone-800">
+                      <h2 className="text-sm font-bold tracking-wider text-stone-800 uppercase">
                         Order Items
                       </h2>
                     </div>
@@ -1374,8 +1362,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     <div className="space-y-3">
                       {items.map((item) => {
                         const itemTotal =
-                          Number(item.price) *
-                          Number(item.quantity);
+                          Number(item.price) * Number(item.quantity);
 
                         return (
                           <div
@@ -1403,10 +1390,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                             </div>
 
                             <span className="text-sm font-bold text-stone-900">
-                              ₹
-                              {itemTotal.toLocaleString(
-                                "en-IN"
-                              )}
+                              ₹{itemTotal.toLocaleString("en-IN")}
                             </span>
                           </div>
                         );
@@ -1417,7 +1401,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                   {/* Place Order */}
 
                   {orderError && (
-                    <p role="alert" className="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                    <p
+                      role="alert"
+                      className="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700"
+                    >
                       {orderError}
                     </p>
                   )}
@@ -1426,7 +1413,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="min-h-[52px] rounded-xl border border-stone-300 bg-white px-6 py-3 text-sm font-bold text-stone-700 transition hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      className="min-h-[52px] rounded-xl border border-stone-300 bg-white px-6 py-3 text-sm font-bold text-stone-700 transition hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                     >
                       Back
                     </button>
@@ -1434,7 +1421,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     <button
                       type="button"
                       onClick={handlePlaceOrder}
-                      className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-emerald-700 px-8 py-3 text-sm font-bold text-white shadow-md transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                      className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-emerald-700 px-8 py-3 text-sm font-bold text-white shadow-md transition hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none"
                     >
                       <Lock className="h-4 w-4" />
                       Confirm Payment & Place Order
@@ -1462,14 +1449,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                   <div className="mt-5 space-y-4">
                     {items.map((item) => {
                       const itemTotal =
-                        Number(item.price) *
-                        Number(item.quantity);
+                        Number(item.price) * Number(item.quantity);
 
                       return (
-                        <div
-                          key={item.id}
-                          className="flex gap-3"
-                        >
+                        <div key={item.id} className="flex gap-3">
                           <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-stone-200 bg-stone-50">
                             {item.image && (
                               <img
@@ -1491,10 +1474,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                           </div>
 
                           <span className="text-sm font-bold text-stone-900">
-                            ₹
-                            {itemTotal.toLocaleString(
-                              "en-IN"
-                            )}
+                            ₹{itemTotal.toLocaleString("en-IN")}
                           </span>
                         </div>
                       );
@@ -1508,9 +1488,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                   {/* Subtotal */}
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-stone-600">
-                      Subtotal
-                    </span>
+                    <span className="text-stone-600">Subtotal</span>
 
                     <span className="font-semibold text-stone-900">
                       ₹{Number(calculatedSubtotal).toLocaleString("en-IN")}
@@ -1518,7 +1496,10 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                   </div>
 
                   <div className="mt-4">
-                    <label htmlFor="checkout-coupon" className="mb-1.5 block text-xs font-semibold text-stone-600">
+                    <label
+                      htmlFor="checkout-coupon"
+                      className="mb-1.5 block text-xs font-semibold text-stone-600"
+                    >
                       Coupon code
                     </label>
                     <div className="flex gap-2">
@@ -1558,7 +1539,11 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                         </button>
                       </p>
                     )}
-                    {couponError && <p className="mt-2 text-xs text-rose-600">{couponError}</p>}
+                    {couponError && (
+                      <p className="mt-2 text-xs text-rose-600">
+                        {couponError}
+                      </p>
+                    )}
                   </div>
 
                   {orderDiscount > 0 && (
@@ -1573,9 +1558,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                   {/* Tax */}
 
                   <div className="mt-3 flex items-center justify-between text-sm">
-                    <span className="text-stone-600">
-                      Tax
-                    </span>
+                    <span className="text-stone-600">Tax</span>
 
                     <span className="font-semibold text-stone-900">
                       ₹{Number(tax).toLocaleString("en-IN")}
@@ -1585,12 +1568,14 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                   {/* Shipping */}
 
                   <div className="mt-3 flex items-center justify-between text-sm">
-                    <span className="text-stone-600">
-                      Shipping
-                    </span>
+                    <span className="text-stone-600">Shipping</span>
 
-                    <span className={`font-bold ${isFreeDelivery ? "text-emerald-600" : "text-stone-900"}`}>
-                      {isFreeDelivery ? "FREE" : `₹${Number(shipping).toLocaleString("en-IN")}`}
+                    <span
+                      className={`font-bold ${isFreeDelivery ? "text-emerald-600" : "text-stone-900"}`}
+                    >
+                      {isFreeDelivery
+                        ? "FREE"
+                        : `₹${Number(shipping).toLocaleString("en-IN")}`}
                     </span>
                   </div>
 
@@ -1600,7 +1585,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     <div className="flex items-start gap-2">
                       <Truck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
 
-                      <p className="text-xs font-semibold leading-5 text-stone-600">
+                      <p className="text-xs leading-5 font-semibold text-stone-600">
                         {isFreeDelivery
                           ? "Your order is eligible for FREE delivery."
                           : "Standard shipping is included in your order total."}
@@ -1612,9 +1597,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
 
                   <div className="mt-5 border-t border-stone-200 pt-5">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-stone-900">
-                        Total
-                      </span>
+                      <span className="font-bold text-stone-900">Total</span>
 
                       <span className="text-xl font-extrabold text-stone-900">
                         ₹{totalAmount.toLocaleString("en-IN")}
