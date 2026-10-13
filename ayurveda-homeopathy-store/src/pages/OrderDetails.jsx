@@ -21,6 +21,7 @@ import {
   normalizePaymentStatus,
   updateOrder,
 } from "../utils/orderStorage";
+import { pushNotification } from "../utils/notificationStore";
 
 const CANCEL_REASONS = [
   "I ordered by mistake",
@@ -185,6 +186,13 @@ const OrderDetails = ({ orderId, onNavigate }) => {
       setOrder(updatedOrder);
       setCancelledConfirmation(true);
       setCancelError("");
+      pushNotification({
+        audience: "admin",
+        type: "warning",
+        title: "Order cancelled by customer",
+        message: `Order ${order.id} was cancelled by the customer. Reason: ${reason}`,
+        meta: { orderId: order.id },
+      });
     }
   };
 

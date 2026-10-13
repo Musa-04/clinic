@@ -43,6 +43,7 @@ import {
   updateAppointmentStatus,
   deleteAppointment,
 } from "../utils/appointmentStorage";
+import { pushNotification } from "../utils/notificationStore";
 import AdminProducts from "./AdminProducts";
 import AdminInsights from "./AdminInsights";
 import AdminManagement from "./AdminManagement";
@@ -216,10 +217,22 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
         );
         if (!result) throw new Error("Appointment not found");
         showToast("Appointment accepted and marked as attended.");
+        pushNotification({
+          audience: "user",
+          type: "appointment",
+          title: "Appointment accepted",
+          message: `Your appointment with ${appointment.doctor} has been accepted.`,
+        });
       } else if (type === "delete") {
         const result = deleteAppointment(appointment.id);
         if (!result) throw new Error("Appointment not found");
         showToast("Appointment request deleted.");
+        pushNotification({
+          audience: "user",
+          type: "warning",
+          title: "Appointment request removed",
+          message: `Your appointment request with ${appointment.doctor} was removed by the clinic.`,
+        });
       }
       refreshAppointments();
       setAppointmentConfirm(null);
@@ -382,12 +395,26 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
       if (type === "accept") {
         await adminOrderService.acceptOrder(order.id);
         showToast("Order accepted successfully.");
+        pushNotification({
+          audience: "user",
+          type: "success",
+          title: "Order confirmed",
+          message: `Order ${order.id} has been confirmed and is now being processed.`,
+          meta: { orderId: order.id },
+        });
       } else if (type === "status") {
         await adminOrderService.updateOrderStatus(
           order.id,
           confirmAction.status,
         );
         showToast(`Order marked ${confirmAction.status.toLowerCase()}.`);
+        pushNotification({
+          audience: "user",
+          type: "order",
+          title: `Order ${confirmAction.status.toLowerCase()}`,
+          message: `Order ${order.id} is now ${confirmAction.status.toLowerCase()}.`,
+          meta: { orderId: order.id },
+        });
       } else if (type === "cancel") {
         const reason =
           cancelReason === "Other" ? otherReason.trim() : cancelReason;
@@ -397,12 +424,33 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
         }
         await adminOrderService.cancelOrder(order.id, reason);
         showToast("Order cancelled.");
+        pushNotification({
+          audience: "user",
+          type: "warning",
+          title: "Order cancelled",
+          message: `Order ${order.id} was cancelled. Reason: ${reason}`,
+          meta: { orderId: order.id },
+        });
       } else if (type === "paymentVerify") {
         await adminOrderService.verifyPayment(order.id);
         showToast("Payment verified manually.");
+        pushNotification({
+          audience: "user",
+          type: "payment",
+          title: "Payment verified",
+          message: `Your payment for order ${order.id} has been verified.`,
+          meta: { orderId: order.id },
+        });
       } else if (type === "paymentFail") {
         await adminOrderService.failPayment(order.id);
         showToast("Payment marked as failed.");
+        pushNotification({
+          audience: "user",
+          type: "warning",
+          title: "Payment failed",
+          message: `The payment for order ${order.id} could not be verified. Please contact the clinic.`,
+          meta: { orderId: order.id },
+        });
       }
       setConfirmAction(null);
       setCancelReason("");

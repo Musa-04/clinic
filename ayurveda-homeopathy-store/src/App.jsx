@@ -26,6 +26,9 @@ import { products } from "./data/products";
 import { getProducts } from "./utils/productStorage";
 import { getProductCategories } from "./utils/adminManagementStorage";
 import { saveAppointment } from "./utils/appointmentStorage";
+import { pushNotification } from "./utils/notificationStore";
+import { NotificationProvider } from "./context/NotificationContext";
+import NotificationToasts from "./components/NotificationToasts";
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -177,7 +180,7 @@ function App() {
     }
 
     try {
-      saveAppointment({
+      const savedAppointment = saveAppointment({
         fullName: fullName.trim(),
         phone: phone.trim(),
         email: email.trim(),
@@ -189,6 +192,12 @@ function App() {
           concern,
         preferredDate,
         message: messageText.trim(),
+      });
+      pushNotification({
+        audience: "admin",
+        type: "appointment",
+        title: "New appointment request",
+        message: `${savedAppointment.fullName} requested an appointment with ${savedAppointment.doctor}.`,
       });
     } catch {
       setValidationError(
@@ -221,14 +230,18 @@ function App() {
 
   if (isAdminRoute) {
     return (
-      <AdminAuthGuard onNavigate={navigate}>
-        <AdminOrders onNavigate={navigate} section={adminSection} />
-      </AdminAuthGuard>
+      <NotificationProvider audience="admin">
+        <AdminAuthGuard onNavigate={navigate}>
+          <AdminOrders onNavigate={navigate} section={adminSection} />
+        </AdminAuthGuard>
+        <NotificationToasts />
+      </NotificationProvider>
     );
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-stone-50 font-sans text-stone-800 antialiased selection:bg-emerald-200 selection:text-emerald-900">
+    <NotificationProvider audience="user">
+      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-stone-50 font-sans text-stone-800 antialiased selection:bg-emerald-200 selection:text-emerald-900">
       {/* Navbar */}
       <Navbar onNavigate={navigate} />
 
@@ -607,7 +620,11 @@ function App() {
 
       {/* Footer */}
       <Footer onNavigate={navigate} />
-    </div>
+
+      {/* Notification pop-ups */}
+      <NotificationToasts />
+      </div>
+    </NotificationProvider>
   );
 }
 

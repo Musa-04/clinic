@@ -8,6 +8,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = ({ onNavigate }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -117,6 +118,7 @@ const Navbar = ({ onNavigate }) => {
 
           {/* Desktop Action Buttons */}
           <div className="hidden items-center gap-2.5 xl:flex">
+            <NotificationBell variant="light" />
             <a
               href="/admin/login"
               onClick={handleAdminClick}
@@ -163,6 +165,7 @@ const Navbar = ({ onNavigate }) => {
 
           {/* Mobile Hamburger Button */}
           <div className="flex items-center gap-1 xl:hidden">
+            <NotificationBell variant="light" />
             <button
               aria-label={`Open cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
               onClick={() => openCart?.()}

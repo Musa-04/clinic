@@ -18,6 +18,7 @@ import {
   updateProduct,
 } from "../utils/productStorage";
 import { getProductCategories } from "../utils/adminManagementStorage";
+import { pushNotification } from "../utils/notificationStore";
 
 const EMPTY_FORM = {
   name: "",
@@ -206,6 +207,14 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
         ? updateProduct(editingProduct.id, product)
         : addProduct(product);
       setProducts(updatedProducts);
+      pushNotification({
+        audience: "user",
+        type: "product",
+        title: editingProduct ? "Product updated" : "New product added",
+        message: editingProduct
+          ? `${product.name} was updated in the catalog.`
+          : `${product.name} is now available in the store.`,
+      });
       closeForm();
     } catch (error) {
       setFormError(
@@ -218,6 +227,12 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
     if (!deletingProduct) return;
     try {
       setProducts(deleteProduct(deletingProduct.id));
+      pushNotification({
+        audience: "user",
+        type: "product",
+        title: "Product removed",
+        message: `${deletingProduct.name} was removed from the catalog.`,
+      });
       setDeletingProduct(null);
       setSaveError("");
     } catch (error) {

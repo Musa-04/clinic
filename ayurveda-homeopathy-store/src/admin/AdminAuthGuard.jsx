@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { ShieldCheck, LogOut, Leaf, UserCheck, Activity } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "../components/NotificationBell";
 
 const AdminAuthGuard = ({ children, onNavigate }) => {
   const { user, loading, isAuthenticated, logout } = useAuth();
@@ -83,6 +84,7 @@ const AdminAuthGuard = ({ children, onNavigate }) => {
           </div>
 
           <div className="flex items-center gap-2">
+            <NotificationBell variant="dark" />
             <span className="hidden items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300 sm:inline-flex">
               <UserCheck className="h-3 w-3" />
               <span>Verified Identity</span>
