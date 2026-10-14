@@ -39,6 +39,15 @@ const Footer = ({ onNavigate }) => {
     }
   };
 
+  const handlePolicyClick = (event) => {
+    event.preventDefault();
+    if (onNavigate) {
+      onNavigate("/privacy-policy");
+    } else {
+      window.location.assign("/privacy-policy");
+    }
+  };
+
   const quickLinks = [
     { name: "Home", hash: "home", onClick: handleHomeClick },
     { name: "What We Treat", hash: "treatments" },
@@ -158,7 +167,7 @@ const Footer = ({ onNavigate }) => {
                   href="mailto:info@malikspolyclinic.com"
                   className="truncate py-1 transition-colors hover:text-emerald-400"
                 >
-                  info@malikspolyclinic.com
+                  mustafeezshaikh88@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-3 pt-1 text-stone-400">
@@ -192,7 +201,11 @@ const Footer = ({ onNavigate }) => {
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
               <span>Admin Portal</span>
             </a>
-            <a href="#" className="py-1 transition-colors hover:text-stone-300">
+            <a
+              href="/privacy-policy"
+              onClick={handlePolicyClick}
+              className="py-1 transition-colors hover:text-stone-300"
+            >
               Privacy Policy
             </a>
             <a href="#" className="py-1 transition-colors hover:text-stone-300">

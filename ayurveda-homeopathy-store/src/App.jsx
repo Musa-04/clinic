@@ -17,6 +17,7 @@ import ProductDetails from "./pages/ProductDetails";
 import OrderSuccess from "./pages/OrderSuccess";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminOrders from "./admin/AdminOrders";
 import AdminAuthGuard from "./admin/AdminAuthGuard";
 import AdminLogin from "./admin/AdminLogin";
@@ -122,6 +123,8 @@ function App() {
       ? decodeURIComponent(successRoute[1])
       : null;
   const isOrdersRoute = currentPath === "/orders" || currentPath === "/orders/";
+  const isPrivacyRoute =
+    currentPath === "/privacy-policy" || currentPath === "/privacy-policy/";
   const isAdminLoginRoute =
     currentPath === "/admin/login" || currentPath === "/admin/login/";
   const isAdminSignupRoute =
@@ -242,387 +245,389 @@ function App() {
   return (
     <NotificationProvider audience="user">
       <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-stone-50 font-sans text-stone-800 antialiased selection:bg-emerald-200 selection:text-emerald-900">
-      {/* Navbar */}
-      <Navbar onNavigate={navigate} />
+        {/* Navbar */}
+        <Navbar onNavigate={navigate} />
 
-      {ordersRoute ? (
-        <OrderDetails orderId={orderId} onNavigate={navigate} />
-      ) : successRoute ? (
-        <OrderSuccess orderId={orderId} onNavigate={navigate} />
-      ) : isOrdersRoute ? (
-        <Orders onNavigate={navigate} />
-      ) : isProductRoute ? (
-        <ProductDetails
-          product={selectedProduct}
-          products={catalogProducts}
-          onBack={() => navigate("/#medicines")}
-          onNavigate={navigate}
-          onNavigateToProduct={(product) => openProduct(product)}
-        />
-      ) : (
-        <main className="w-full max-w-full grow">
-          {/* Hero */}
-          <Hero />
-
-          {/* Doctors */}
-          <Doctors />
-
-          {/* About */}
-          <About />
-
-          {/* Treatments & Wellness Services */}
-          <WhatWeTreat />
-
-          {/* Products */}
-          <Products
+        {ordersRoute ? (
+          <OrderDetails orderId={orderId} onNavigate={navigate} />
+        ) : successRoute ? (
+          <OrderSuccess orderId={orderId} onNavigate={navigate} />
+        ) : isOrdersRoute ? (
+          <Orders onNavigate={navigate} />
+        ) : isPrivacyRoute ? (
+          <PrivacyPolicy onNavigate={navigate} />
+        ) : isProductRoute ? (
+          <ProductDetails
+            product={selectedProduct}
             products={catalogProducts}
-            productCategories={productCategories}
-            catalogError={catalogError}
-            onViewProduct={openProduct}
+            onBack={() => navigate("/#medicines")}
+            onNavigate={navigate}
+            onNavigateToProduct={(product) => openProduct(product)}
           />
+        ) : (
+          <main className="w-full max-w-full grow">
+            {/* Hero */}
+            <Hero />
 
-          {/* Why Choose Us */}
-          <WhyChooseUs />
+            {/* Doctors */}
+            <Doctors />
 
-          {/* How It Works */}
-          <HowItWorks />
+            {/* About */}
+            <About />
 
-          {/* Testimonials */}
-          <Testimonials />
+            {/* Treatments & Wellness Services */}
+            <WhatWeTreat />
 
-          {/* Appointment */}
-          <section
-            id="contact"
-            className="w-full bg-linear-to-b from-stone-100 to-emerald-950 py-14 sm:py-20"
-          >
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
-                {/* Left Content */}
-                <div className="flex flex-col justify-center lg:col-span-5">
-                  <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-emerald-800/60 px-3 py-1.5 text-xs font-semibold tracking-wider text-emerald-200 uppercase">
-                    <Stethoscope className="h-4 w-4 shrink-0 text-emerald-400" />
-                    <span>Appointment</span>
+            {/* Products */}
+            <Products
+              products={catalogProducts}
+              productCategories={productCategories}
+              catalogError={catalogError}
+              onViewProduct={openProduct}
+            />
+
+            {/* Why Choose Us */}
+            <WhyChooseUs />
+
+            {/* How It Works */}
+            <HowItWorks />
+
+            {/* Testimonials */}
+            <Testimonials />
+
+            {/* Appointment */}
+            <section
+              id="contact"
+              className="w-full bg-linear-to-b from-stone-100 to-emerald-950 py-14 sm:py-20"
+            >
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
+                  {/* Left Content */}
+                  <div className="flex flex-col justify-center lg:col-span-5">
+                    <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-emerald-800/60 px-3 py-1.5 text-xs font-semibold tracking-wider text-emerald-200 uppercase">
+                      <Stethoscope className="h-4 w-4 shrink-0 text-emerald-400" />
+                      <span>Appointment</span>
+                    </div>
+
+                    <h2 className="text-3xl leading-tight font-extrabold tracking-tight text-white sm:text-4xl">
+                      Book an Appointment
+                    </h2>
+
+                    <p className="mt-4 max-w-lg text-sm leading-7 text-emerald-100/80 sm:text-base">
+                      Schedule a consultation with our Homeopathic or Ayurvedic
+                      doctor. Share your details and health concern, and our
+                      clinic team can assist you with the next steps.
+                    </p>
+
+                    <div className="mt-8 space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-800/60">
+                          <CheckCircle className="h-4 w-4 text-emerald-300" />
+                        </div>
+
+                        <div>
+                          <h3 className="text-sm font-bold text-white">
+                            Personalized Consultation
+                          </h3>
+                          <p className="mt-1 text-sm leading-6 text-emerald-100/70">
+                            Discuss your health concerns with our qualified
+                            practitioners.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-800/60">
+                          <CheckCircle className="h-4 w-4 text-emerald-300" />
+                        </div>
+
+                        <div>
+                          <h3 className="text-sm font-bold text-white">
+                            Natural Healthcare
+                          </h3>
+                          <p className="mt-1 text-sm leading-6 text-emerald-100/70">
+                            Explore Homeopathic and Ayurvedic approaches based on
+                            your individual needs.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-800/60">
+                          <CheckCircle className="h-4 w-4 text-emerald-300" />
+                        </div>
+
+                        <div>
+                          <h3 className="text-sm font-bold text-white">
+                            Easy Appointment Request
+                          </h3>
+                          <p className="mt-1 text-sm leading-6 text-emerald-100/70">
+                            Submit your details and our clinic team will get in
+                            touch with you.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <h2 className="text-3xl leading-tight font-extrabold tracking-tight text-white sm:text-4xl">
-                    Book an Appointment
-                  </h2>
-
-                  <p className="mt-4 max-w-lg text-sm leading-7 text-emerald-100/80 sm:text-base">
-                    Schedule a consultation with our Homeopathic or Ayurvedic
-                    doctor. Share your details and health concern, and our
-                    clinic team can assist you with the next steps.
-                  </p>
-
-                  <div className="mt-8 space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-800/60">
-                        <CheckCircle className="h-4 w-4 text-emerald-300" />
-                      </div>
-
-                      <div>
-                        <h3 className="text-sm font-bold text-white">
-                          Personalized Consultation
+                  {/* Appointment Form */}
+                  <div className="lg:col-span-7">
+                    <div className="rounded-2xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-8">
+                      <div className="mb-6">
+                        <h3 className="text-xl font-bold text-stone-900 sm:text-2xl">
+                          Appointment Details
                         </h3>
-                        <p className="mt-1 text-sm leading-6 text-emerald-100/70">
-                          Discuss your health concerns with our qualified
-                          practitioners.
+
+                        <p className="mt-1 text-sm text-stone-500">
+                          Please fill in your details below.
                         </p>
                       </div>
-                    </div>
 
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-800/60">
-                        <CheckCircle className="h-4 w-4 text-emerald-300" />
-                      </div>
+                      {/* Validation Error */}
+                      {validationError && (
+                        <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                          <p className="text-sm font-medium text-rose-600">
+                            {validationError}
+                          </p>
+                        </div>
+                      )}
 
-                      <div>
-                        <h3 className="text-sm font-bold text-white">
-                          Natural Healthcare
-                        </h3>
-                        <p className="mt-1 text-sm leading-6 text-emerald-100/70">
-                          Explore Homeopathic and Ayurvedic approaches based on
-                          your individual needs.
-                        </p>
-                      </div>
-                    </div>
+                      {/* Success Message */}
+                      {successMessage && (
+                        <div className="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                          <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
 
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-800/60">
-                        <CheckCircle className="h-4 w-4 text-emerald-300" />
-                      </div>
+                          <p className="text-sm leading-6 font-medium text-emerald-700">
+                            {successMessage}
+                          </p>
+                        </div>
+                      )}
 
-                      <div>
-                        <h3 className="text-sm font-bold text-white">
-                          Easy Appointment Request
-                        </h3>
-                        <p className="mt-1 text-sm leading-6 text-emerald-100/70">
-                          Submit your details and our clinic team will get in
-                          touch with you.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                      <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* Name + Phone */}
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                          {/* Full Name */}
+                          <div>
+                            <label
+                              htmlFor="fullName"
+                              className="mb-1.5 block text-sm font-semibold text-stone-700"
+                            >
+                              Full Name
+                            </label>
 
-                {/* Appointment Form */}
-                <div className="lg:col-span-7">
-                  <div className="rounded-2xl bg-white p-5 shadow-2xl sm:rounded-3xl sm:p-8">
-                    <div className="mb-6">
-                      <h3 className="text-xl font-bold text-stone-900 sm:text-2xl">
-                        Appointment Details
-                      </h3>
+                            <input
+                              id="fullName"
+                              type="text"
+                              placeholder="Enter your full name"
+                              value={fullName}
+                              onChange={(e) => setFullName(e.target.value)}
+                              className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            />
+                          </div>
 
-                      <p className="mt-1 text-sm text-stone-500">
-                        Please fill in your details below.
-                      </p>
-                    </div>
+                          {/* Phone */}
+                          <div>
+                            <label
+                              htmlFor="phone"
+                              className="mb-1.5 block text-sm font-semibold text-stone-700"
+                            >
+                              Phone Number
+                            </label>
 
-                    {/* Validation Error */}
-                    {validationError && (
-                      <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
-                        <p className="text-sm font-medium text-rose-600">
-                          {validationError}
-                        </p>
-                      </div>
-                    )}
+                            <input
+                              id="phone"
+                              type="tel"
+                              placeholder="+91 98765 43210"
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            />
+                          </div>
+                        </div>
 
-                    {/* Success Message */}
-                    {successMessage && (
-                      <div className="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                        <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
-
-                        <p className="text-sm leading-6 font-medium text-emerald-700">
-                          {successMessage}
-                        </p>
-                      </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                      {/* Name + Phone */}
-                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                        {/* Full Name */}
+                        {/* Email */}
                         <div>
                           <label
-                            htmlFor="fullName"
+                            htmlFor="email"
                             className="mb-1.5 block text-sm font-semibold text-stone-700"
                           >
-                            Full Name
+                            Email
                           </label>
 
                           <input
-                            id="fullName"
-                            type="text"
-                            placeholder="Enter your full name"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
+                            id="email"
+                            type="email"
+                            placeholder="Enter your email address"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           />
                         </div>
 
-                        {/* Phone */}
+                        {/* Doctor + Concern */}
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                          {/* Doctor */}
+                          <div>
+                            <label
+                              htmlFor="doctor"
+                              className="mb-1.5 block text-sm font-semibold text-stone-700"
+                            >
+                              Select Doctor
+                            </label>
+
+                            <select
+                              id="doctor"
+                              name="doctor"
+                              value={doctor}
+                              onChange={(e) => setDoctor(e.target.value)}
+                              className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            >
+                              <option value="" disabled>
+                                Select a doctor
+                              </option>
+
+                              <option value="mozim">
+                                Dr. Mozim Malik - BHMS, CCH
+                              </option>
+
+                              <option value="karishma">
+                                Dr. Karishma Malik - BAMS, YIC
+                              </option>
+                            </select>
+                          </div>
+
+                          {/* Concern */}
+                          <div>
+                            <label
+                              htmlFor="concern"
+                              className="mb-1.5 block text-sm font-semibold text-stone-700"
+                            >
+                              Select Concern
+                            </label>
+
+                            <select
+                              id="concern"
+                              name="concern"
+                              value={concern}
+                              onChange={(e) => setConcern(e.target.value)}
+                              className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            >
+                              <option value="" disabled>
+                                Select your concern
+                              </option>
+
+                              <option value="digestive">
+                                Digestive Disorders
+                              </option>
+
+                              <option value="skin-hair">
+                                Skin & Hair Disorders
+                              </option>
+
+                              <option value="joint-muscle">
+                                Joint & Muscle Disorders
+                              </option>
+
+                              <option value="respiratory">
+                                Respiratory Disorders
+                              </option>
+
+                              <option value="stress-anxiety">
+                                Stress & Anxiety
+                              </option>
+
+                              <option value="womens-health">
+                                Women's Health
+                              </option>
+
+                              <option value="urinary-kidney">
+                                Urinary & Kidney Health
+                              </option>
+
+                              <option value="pcod-pcos">PCOD / PCOS</option>
+
+                              <option value="weight-management">
+                                Weight Management
+                              </option>
+
+                              <option value="general-wellness">
+                                General Wellness
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Preferred Date */}
                         <div>
                           <label
-                            htmlFor="phone"
+                            htmlFor="preferredDate"
                             className="mb-1.5 block text-sm font-semibold text-stone-700"
                           >
-                            Phone Number
+                            Preferred Date
                           </label>
 
                           <input
-                            id="phone"
-                            type="tel"
-                            placeholder="+91 98765 43210"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                            id="preferredDate"
+                            type="date"
+                            value={preferredDate}
+                            onChange={(e) => setPreferredDate(e.target.value)}
+                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                           />
                         </div>
-                      </div>
 
-                      {/* Email */}
-                      <div>
-                        <label
-                          htmlFor="email"
-                          className="mb-1.5 block text-sm font-semibold text-stone-700"
-                        >
-                          Email
-                        </label>
-
-                        <input
-                          id="email"
-                          type="email"
-                          placeholder="Enter your email address"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                        />
-                      </div>
-
-                      {/* Doctor + Concern */}
-                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                        {/* Doctor */}
+                        {/* Message */}
                         <div>
                           <label
-                            htmlFor="doctor"
+                            htmlFor="message"
                             className="mb-1.5 block text-sm font-semibold text-stone-700"
                           >
-                            Select Doctor
+                            Message
                           </label>
 
-                          <select
-                            id="doctor"
-                            name="doctor"
-                            value={doctor}
-                            onChange={(e) => setDoctor(e.target.value)}
-                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                          >
-                            <option value="" disabled>
-                              Select a doctor
-                            </option>
-
-                            <option value="mozim">
-                              Dr. Mozim Malik - BHMS, CCH
-                            </option>
-
-                            <option value="karishma">
-                              Dr. Karishma Malik - BAMS, YIC
-                            </option>
-                          </select>
+                          <textarea
+                            id="message"
+                            rows="4"
+                            placeholder="Tell us briefly about your concern..."
+                            value={messageText}
+                            onChange={(e) => setMessageText(e.target.value)}
+                            className="w-full resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                          />
                         </div>
 
-                        {/* Concern */}
-                        <div>
-                          <label
-                            htmlFor="concern"
-                            className="mb-1.5 block text-sm font-semibold text-stone-700"
-                          >
-                            Select Concern
-                          </label>
-
-                          <select
-                            id="concern"
-                            name="concern"
-                            value={concern}
-                            onChange={(e) => setConcern(e.target.value)}
-                            className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                          >
-                            <option value="" disabled>
-                              Select your concern
-                            </option>
-
-                            <option value="digestive">
-                              Digestive Disorders
-                            </option>
-
-                            <option value="skin-hair">
-                              Skin & Hair Disorders
-                            </option>
-
-                            <option value="joint-muscle">
-                              Joint & Muscle Disorders
-                            </option>
-
-                            <option value="respiratory">
-                              Respiratory Disorders
-                            </option>
-
-                            <option value="stress-anxiety">
-                              Stress & Anxiety
-                            </option>
-
-                            <option value="womens-health">
-                              Women's Health
-                            </option>
-
-                            <option value="urinary-kidney">
-                              Urinary & Kidney Health
-                            </option>
-
-                            <option value="pcod-pcos">PCOD / PCOS</option>
-
-                            <option value="weight-management">
-                              Weight Management
-                            </option>
-
-                            <option value="general-wellness">
-                              General Wellness
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* Preferred Date */}
-                      <div>
-                        <label
-                          htmlFor="preferredDate"
-                          className="mb-1.5 block text-sm font-semibold text-stone-700"
+                        {/* Submit */}
+                        <button
+                          type="submit"
+                          className="flex min-h-12.5 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-emerald-900/20 transition hover:bg-emerald-800 active:bg-emerald-900"
                         >
-                          Preferred Date
-                        </label>
-
-                        <input
-                          id="preferredDate"
-                          type="date"
-                          value={preferredDate}
-                          onChange={(e) => setPreferredDate(e.target.value)}
-                          className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                        />
-                      </div>
-
-                      {/* Message */}
-                      <div>
-                        <label
-                          htmlFor="message"
-                          className="mb-1.5 block text-sm font-semibold text-stone-700"
-                        >
-                          Message
-                        </label>
-
-                        <textarea
-                          id="message"
-                          rows="4"
-                          placeholder="Tell us briefly about your concern..."
-                          value={messageText}
-                          onChange={(e) => setMessageText(e.target.value)}
-                          className="w-full resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                        />
-                      </div>
-
-                      {/* Submit */}
-                      <button
-                        type="submit"
-                        className="flex min-h-12.5 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-emerald-900/20 transition hover:bg-emerald-800 active:bg-emerald-900"
-                      >
-                        <Stethoscope className="h-4 w-4 shrink-0" />
-                        <span>Submit Appointment Request</span>
-                      </button>
-                    </form>
+                          <Stethoscope className="h-4 w-4 shrink-0" />
+                          <span>Submit Appointment Request</span>
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </section>
-        </main>
-      )}
+            </section>
+          </main>
+        )}
 
-      {/* Cart Drawer */}
-      <CartDrawer onCheckout={() => navigate("/checkout")} />
+        {/* Cart Drawer */}
+        <CartDrawer onCheckout={() => navigate("/checkout")} />
 
-      {/* Checkout */}
-      <Checkout
-        onOrderPlaced={(order) =>
-          navigate(`/order-success/${encodeURIComponent(order.id)}`)
-        }
-        onClose={() => navigate("/#medicines")}
-        onViewOrders={() => navigate("/orders")}
-      />
+        {/* Checkout */}
+        <Checkout
+          onOrderPlaced={(order) =>
+            navigate(`/order-success/${encodeURIComponent(order.id)}`)
+          }
+          onClose={() => navigate("/#medicines")}
+          onViewOrders={() => navigate("/orders")}
+        />
 
-      {/* Footer */}
-      <Footer onNavigate={navigate} />
+        {/* Footer */}
+        <Footer onNavigate={navigate} />
 
-      {/* Notification pop-ups */}
-      <NotificationToasts />
+        {/* Notification pop-ups */}
+        <NotificationToasts />
       </div>
     </NotificationProvider>
   );
