@@ -12,6 +12,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { pushNotification } from "../utils/notificationStore";
 
 const ProductDetails = ({
   product,
@@ -74,12 +75,14 @@ const ProductDetails = ({
 
   const handleAddToCart = () => {
     addItem(product, quantity);
+    pushNotification({ audience: "user", type: "success", title: "Added to cart", message: `${quantity} ${quantity === 1 ? "item" : "items"} of ${product.name} added to your cart.` });
     setShowAddedMessage(true);
     window.setTimeout(() => setShowAddedMessage(false), 2200);
   };
 
   const handleBuyNow = () => {
     addItem(product, quantity);
+    pushNotification({ audience: "user", type: "success", title: "Ready for checkout", message: `${product.name} was added to your order.` });
     openCheckout();
     onNavigate?.("/checkout");
   };

@@ -206,12 +206,24 @@ function App() {
       setValidationError(
         "Your appointment request could not be saved. Please check browser storage and try again.",
       );
+      pushNotification({
+        audience: "user",
+        type: "warning",
+        title: "Appointment request not sent",
+        message: "Please check your details and try again.",
+      });
       return;
     }
 
     setSuccessMessage(
       "Your appointment request has been submitted successfully. Our clinic team will contact you soon.",
     );
+    pushNotification({
+      audience: "user",
+      type: "success",
+      title: "Appointment request sent",
+      message: "Our clinic team will contact you soon.",
+    });
 
     // Clear form
     setFullName("");
@@ -612,7 +624,10 @@ function App() {
         )}
 
         {/* Cart Drawer */}
-        <CartDrawer onCheckout={() => navigate("/checkout")} />
+        <CartDrawer
+          onCheckout={() => navigate("/checkout")}
+          onBrowse={() => navigate("/#medicines")}
+        />
 
         {/* Checkout */}
         <Checkout

@@ -175,7 +175,7 @@ const PrivacyPolicy = ({ onNavigate }) => {
                     <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {/* Email card */}
                         <a
-                            href="mailto:ahmedsaif121.sa@gmail.com"
+                            href="mailto:mozammalik333@gmail.com"
                             className="flex items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 px-4 py-4 text-stone-700 transition-colors hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800"
                         >
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
@@ -186,7 +186,7 @@ const PrivacyPolicy = ({ onNavigate }) => {
                                     Email
                                 </p>
                                 <p className="mt-0.5 text-sm font-medium break-all">
-                                    mustafeezshaikh88@gmail.com
+                                    mozammalik333@gmail.com
                                 </p>
                             </div>
                         </a>

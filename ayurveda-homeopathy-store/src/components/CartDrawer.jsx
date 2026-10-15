@@ -1,8 +1,9 @@
 import React from "react";
 import { X, Trash } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { pushNotification } from "../utils/notificationStore";
 
-const CartDrawer = ({ onCheckout }) => {
+const CartDrawer = ({ onCheckout, onBrowse }) => {
   const {
     items,
     isOpen,
@@ -17,11 +18,14 @@ const CartDrawer = ({ onCheckout }) => {
 
   if (!isOpen) return null;
 
+  const notify = (title, message, type = "success") =>
+    pushNotification({ audience: "user", type, title, message });
+
   return (
-    <div className="fixed inset-0 z-50 flex">
+    <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Shopping cart">
       <div className="flex-1" onClick={close} />
 
-      <aside className="w-full max-w-md overflow-y-auto bg-white p-5 shadow-2xl">
+      <aside className="w-full max-w-md overflow-y-auto bg-white p-4 shadow-2xl sm:p-5">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-bold">Your Cart</h3>
           <button
@@ -36,12 +40,16 @@ const CartDrawer = ({ onCheckout }) => {
         {items.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-stone-600">Your cart is empty.</p>
-            <a
-              href="#medicines"
+            <button
+              type="button"
+              onClick={() => {
+                close();
+                onBrowse?.();
+              }}
               className="mt-4 inline-flex items-center rounded-xl bg-emerald-700 px-4 py-2 text-white"
             >
               Browse Products
-            </a>
+            </button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -60,8 +68,11 @@ const CartDrawer = ({ onCheckout }) => {
                     <h4 className="text-sm font-semibold">{it.name}</h4>
                     <button
                       aria-label="Remove item"
-                      onClick={() => removeItem(it.id)}
-                      className="cursor-pointer rounded-md p-1 hover:bg-stone-100"
+                      onClick={() => {
+                        removeItem(it.id);
+                        notify("Item removed", `${it.name} was removed from your cart.`);
+                      }}
+                      className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-md p-1 hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                     >
                       <Trash className="h-4 w-4 text-rose-600" />
                     </button>
@@ -73,17 +84,17 @@ const CartDrawer = ({ onCheckout }) => {
                     <button
                       aria-label="Decrease quantity"
                       onClick={() => decrease(it.id)}
-                      className="cursor-pointer rounded-md border px-2 py-1"
+                      className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                     >
                       -
                     </button>
-                    <span className="rounded-md border px-3 py-1">
+                    <span className="flex min-h-10 min-w-10 items-center justify-center rounded-md border px-3 py-1" aria-live="polite">
                       {it.quantity}
                     </span>
                     <button
                       aria-label="Increase quantity"
                       onClick={() => increase(it.id)}
-                      className="cursor-pointer rounded-md border px-2 py-1"
+                      className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                     >
                       +
                     </button>
@@ -102,17 +113,21 @@ const CartDrawer = ({ onCheckout }) => {
 
               <div className="mt-4 flex gap-2">
                 <button
-                  onClick={clear}
-                  className="flex-1 cursor-pointer rounded-xl border px-4 py-3"
+                  onClick={() => {
+                    clear();
+                    notify("Cart cleared", "All items have been removed from your cart.");
+                  }}
+                  className="min-h-12 flex-1 cursor-pointer rounded-xl border px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                 >
                   Clear Cart
                 </button>
                 <button
                   onClick={() => {
                     close();
-                    onCheckout ? onCheckout() : openCheckout();
+                    if (onCheckout) onCheckout();
+                    else openCheckout();
                   }}
-                  className="flex-1 cursor-pointer rounded-xl bg-emerald-700 px-4 py-3 text-center text-white"
+                  className="min-h-12 flex-1 cursor-pointer rounded-xl bg-emerald-700 px-4 py-3 text-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                 >
                   Proceed to Order
                 </button>

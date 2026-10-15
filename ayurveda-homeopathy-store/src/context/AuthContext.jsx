@@ -3,8 +3,8 @@ import { supabase } from "../supabaseClient";
 
 const AuthContext = createContext(null);
 
-const STORAGE_ADMIN_KEY = "maliks_admin_session";
-const STORAGE_ADMIN_USERS_KEY = "maliks_registered_admins";
+export const STORAGE_ADMIN_KEY = "maliks_admin_session";
+export const STORAGE_ADMIN_USERS_KEY = "maliks_registered_admins";
 export const CLINIC_ADMIN_SECRET_KEY = "MALIK2026";
 
 export const CLINIC_ROLES = [

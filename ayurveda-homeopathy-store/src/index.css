@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Lock dark mode to explicit .dark class only — prevents OS/browser dark mode
+   from overriding the site's designed light theme (Tailwind v4 fix). */
+@variant dark (&:where(.dark, .dark *));
+
 @layer base {
 
   html,

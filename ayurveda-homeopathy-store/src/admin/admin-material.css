@@ -1,0 +1,95 @@
+/* Material 3-inspired clinic administration surface. Scoped to avoid public storefront changes. */
+.admin-material {
+  --admin-primary: #006c59;
+  --admin-primary-container: #8df8d8;
+  --admin-on-primary-container: #002019;
+  --admin-surface: #f7faf6;
+  --admin-surface-container: #edf1eb;
+  --admin-surface-high: #e6ebe4;
+  --admin-outline: #707a74;
+  --admin-ink: #1a1d1b;
+  --admin-muted: #57615b;
+  --admin-error: #ba1a1a;
+  --admin-error-container: #ffdad6;
+  --admin-warning: #765b00;
+  --admin-warning-container: #ffecb2;
+  --admin-info: #245f74;
+  --admin-info-container: #ccecff;
+  background: var(--admin-surface);
+  color: var(--admin-ink);
+}
+
+.admin-material .admin-appbar {
+  background: color-mix(in srgb, var(--admin-surface) 92%, white);
+  border-color: #dce3da;
+  box-shadow: 0 2px 8px rgb(28 37 31 / 8%);
+}
+
+.admin-material .admin-sidebar {
+  background: #f0f4ef;
+  border-color: #dce3da;
+  box-shadow: 4px 0 18px rgb(28 37 31 / 8%);
+}
+
+.admin-material .admin-surface {
+  background: var(--admin-surface-container);
+  border: 1px solid #dce3da;
+  box-shadow: 0 1px 2px rgb(28 37 31 / 8%), 0 2px 7px rgb(28 37 31 / 5%);
+}
+
+.admin-material .admin-raised {
+  background: #fbfdf9;
+  border: 1px solid #dce3da;
+  box-shadow: 0 1px 2px rgb(28 37 31 / 9%), 0 4px 12px rgb(28 37 31 / 7%);
+}
+
+.admin-material .admin-tonal {
+  background: #e1e8df;
+  color: var(--admin-ink);
+}
+
+.admin-material .admin-on-surface { color: var(--admin-ink); }
+.admin-material .admin-on-surface-variant { color: var(--admin-muted); }
+.admin-material .admin-outline { border-color: #c2cbc1; }
+.admin-material .admin-divider { border-color: #d8dfd6; }
+.admin-material .admin-error-container { background: var(--admin-error-container); color: #410001; }
+.admin-material .admin-warning-container { background: var(--admin-warning-container); color: #3e2e00; }
+.admin-material .admin-info-container { background: var(--admin-info-container); color: #002f3d; }
+.admin-material .admin-status-success { background: #b7f7d9; color: #005139; }
+.admin-material .admin-status-error { background: #ffdad6; color: #93000a; }
+.admin-material .admin-status-warning { background: #ffecb2; color: #5e4800; }
+.admin-material .admin-status-info { background: #ccecff; color: #004e62; }
+
+.admin-material .admin-nav-active {
+  background: var(--admin-primary-container);
+  color: var(--admin-on-primary-container);
+}
+
+.admin-material .admin-nav-active svg { color: var(--admin-on-primary-container); }
+.admin-material .admin-nav-item { color: #3e4942; }
+.admin-material .admin-nav-item:hover { background: #e1e8df; color: #18231d; }
+
+.admin-material .admin-field { color: var(--admin-ink); background: #fbfdf9; border: 1px solid #bfc9bf; color-scheme: light; }
+.admin-material .admin-field::placeholder { color: #6b746e; }
+.admin-material .admin-primary-button { background: var(--admin-primary); color: white; box-shadow: 0 2px 4px rgb(0 70 58 / 22%); }
+.admin-material .admin-primary-button:hover { background: #005d4d; }
+.admin-material .admin-queue {
+  background: linear-gradient(135deg, #e2f4ea 0%, #edf3e9 58%, #e5f0ec 100%);
+  border: 1px solid #c7d9cc;
+  box-shadow: 0 2px 5px rgb(28 37 31 / 8%), 0 10px 22px rgb(28 37 31 / 7%);
+}
+.admin-material .admin-queue-item { background: rgb(255 255 255 / 62%); border: 1px solid rgb(188 207 192 / 78%); }
+
+.admin-material button, .admin-material a, .admin-material article {
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+.admin-material .admin-raised:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgb(28 37 31 / 12%), 0 10px 24px rgb(28 37 31 / 7%); }
+.admin-material button:active { transform: scale(.98); }
+.admin-material button:focus-visible, .admin-material a:focus-visible { outline: 3px solid rgb(0 108 89 / 35%); outline-offset: 2px; }
+
+@media (max-width: 1023px) {
+  .admin-material .admin-sidebar { box-shadow: 8px 0 26px rgb(28 37 31 / 18%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-material *, .admin-material *::before, .admin-material *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

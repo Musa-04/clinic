@@ -4,6 +4,8 @@ import {
   normalizePaymentStatus,
   updateOrderStrict as updateOrder,
 } from "../utils/orderStorage";
+import { logAdminAction, ADMIN_ACTION_TYPES } from "../utils/adminActionLog";
+import { requireAdminAuth } from "../utils/adminAuth";
 
 export const ORDER_STATUSES = [
   "PENDING",
@@ -129,15 +131,25 @@ const localOrderAdapter = {
     return order ? normalizeOrder(order) : null;
   },
 
-  async acceptOrder(orderId) {
+  async acceptOrder(orderId, adminIdentity) {
+    requireAdminAuth(adminIdentity);
     const order = getOrderOrThrow(orderId);
     if (normalizeOrderStatus(order) !== "PENDING") {
       throw new Error("Only pending orders can be accepted.");
     }
-    return persistStatus(order, "CONFIRMED");
+    const result = persistStatus(order, "CONFIRMED");
+    logAdminAction({
+      actionType: ADMIN_ACTION_TYPES.ORDER_ACCEPT,
+      adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+      targetId: orderId,
+      targetType: "order",
+      details: { previousStatus: "PENDING", newStatus: "CONFIRMED" },
+    });
+    return result;
   },
 
-  async updateOrderStatus(orderId, nextStatus) {
+  async updateOrderStatus(orderId, nextStatus, adminIdentity) {
+    requireAdminAuth(adminIdentity);
     const order = getOrderOrThrow(orderId);
     const currentStatus = normalizeOrderStatus(order);
     const allowedNextStatus = {
@@ -151,10 +163,19 @@ const localOrderAdapter = {
       );
     }
 
-    return persistStatus(order, nextStatus);
+    const result = persistStatus(order, nextStatus);
+    logAdminAction({
+      actionType: ADMIN_ACTION_TYPES.ORDER_STATUS_UPDATE,
+      adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+      targetId: orderId,
+      targetType: "order",
+      details: { previousStatus: currentStatus, newStatus: nextStatus },
+    });
+    return result;
   },
 
-  async cancelOrder(orderId, reason) {
+  async cancelOrder(orderId, reason, adminIdentity) {
+    requireAdminAuth(adminIdentity);
     const order = getOrderOrThrow(orderId);
     const currentStatus = normalizeOrderStatus(order);
     if (!["PENDING", "CONFIRMED"].includes(currentStatus)) {
@@ -163,7 +184,7 @@ const localOrderAdapter = {
     if (!reason?.trim()) throw new Error("A cancellation reason is required.");
 
     const cancelledAt = new Date().toISOString();
-    return persistStatus(
+    const result = persistStatus(
       order,
       "CANCELLED",
       {
@@ -175,20 +196,46 @@ const localOrderAdapter = {
       },
       cancelledAt,
     );
+    logAdminAction({
+      actionType: ADMIN_ACTION_TYPES.ORDER_CANCEL,
+      adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+      targetId: orderId,
+      targetType: "order",
+      details: { previousStatus: currentStatus, reason: reason.trim() },
+    });
+    return result;
   },
 
   async verifyPayment(orderId, adminIdentity) {
-    return persistPaymentStatus(
+    requireAdminAuth(adminIdentity);
+    const result = persistPaymentStatus(
       orderId,
       "VERIFIED",
       "verifiedAt",
       adminIdentity,
       true,
     );
+    logAdminAction({
+      actionType: ADMIN_ACTION_TYPES.PAYMENT_VERIFY,
+      adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+      targetId: orderId,
+      targetType: "order",
+      details: { paymentStatus: "VERIFIED" },
+    });
+    return result;
   },
 
   async failPayment(orderId, adminIdentity) {
-    return persistPaymentStatus(orderId, "FAILED", "failedAt", adminIdentity);
+    requireAdminAuth(adminIdentity);
+    const result = persistPaymentStatus(orderId, "FAILED", "failedAt", adminIdentity);
+    logAdminAction({
+      actionType: ADMIN_ACTION_TYPES.PAYMENT_FAIL,
+      adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+      targetId: orderId,
+      targetType: "order",
+      details: { paymentStatus: "FAILED" },
+    });
+    return result;
   },
 };
 

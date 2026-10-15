@@ -73,14 +73,19 @@ const Footer = ({ onNavigate }) => {
         <div className="grid grid-cols-1 gap-8 border-b border-stone-800 pb-10 text-left sm:gap-10 sm:pb-12 md:grid-cols-2 lg:grid-cols-12">
           {/* Brand Info */}
           <div className="space-y-4 sm:space-y-5 lg:col-span-4">
-            <div className="flex items-center gap-2.5">
+            <a
+              href="/"
+              onClick={handleHomeClick}
+              aria-label="Malik's Polyclinic home"
+              className="group inline-flex min-h-11 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-900"
+            >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
                 <Leaf className="h-5 w-5 fill-emerald-100/20 text-emerald-100" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-white sm:text-2xl">
+              <span className="text-xl font-bold tracking-tight text-white transition-colors group-hover:text-emerald-100 sm:text-2xl">
                 Malik's <span className="text-emerald-500">Polyclinic</span>
               </span>
-            </div>
+            </a>
 
             <p className="max-w-sm text-xs leading-relaxed text-stone-400 sm:text-sm">
               Providing compassionate, personalized Homeopathic and Ayurvedic
@@ -164,10 +169,10 @@ const Footer = ({ onNavigate }) => {
               <li className="flex items-center gap-3 text-stone-400">
                 <Mail className="h-4 w-4 shrink-0 text-emerald-500" />
                 <a
-                  href="mailto:info@malikspolyclinic.com"
+                  href="mailto:mozammalik333@gmail.com"
                   className="truncate py-1 transition-colors hover:text-emerald-400"
                 >
-                  mustafeezshaikh88@gmail.com
+                  mozammalik333@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-3 pt-1 text-stone-400">
@@ -207,12 +212,6 @@ const Footer = ({ onNavigate }) => {
               className="py-1 transition-colors hover:text-stone-300"
             >
               Privacy Policy
-            </a>
-            <a href="#" className="py-1 transition-colors hover:text-stone-300">
-              Terms of Service
-            </a>
-            <a href="#" className="py-1 transition-colors hover:text-stone-300">
-              Medical Disclaimer
             </a>
           </div>
         </div>

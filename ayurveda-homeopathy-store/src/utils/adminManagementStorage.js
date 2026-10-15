@@ -1,4 +1,6 @@
 import { getProducts } from "./productStorage";
+import { logAdminAction, ADMIN_ACTION_TYPES } from "./adminActionLog";
+import { requireAdminAuth } from "./adminAuth";
 
 export const PRODUCT_CATEGORIES_STORAGE_KEY = "maliks_product_categories";
 export const COUPONS_STORAGE_KEY = "maliks_coupons";
@@ -116,19 +118,26 @@ const persistCategories = (categories) => {
 export const getProductCategories = () =>
   readCategories().map(({ name }) => name);
 
-export const addProductCategory = (name) => {
+export const addProductCategory = (name, adminIdentity) => {
+  requireAdminAuth(adminIdentity);
   const normalizedName = normalizeCategory(name);
   const categories = readCategories();
   ensureUniqueCategory(categories, normalizedName);
-  const nextCategories = [
-    ...categories,
-    { id: makeId("category"), name: normalizedName },
-  ];
+  const newCategory = { id: makeId("category"), name: normalizedName };
+  const nextCategories = [...categories, newCategory];
   persistCategories(nextCategories);
+  logAdminAction({
+    actionType: ADMIN_ACTION_TYPES.CATEGORY_ADD,
+    adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+    targetId: newCategory.id,
+    targetType: "category",
+    details: { name: normalizedName },
+  });
   return nextCategories.map(({ name: categoryName }) => categoryName);
 };
 
-export const updateProductCategory = (categoryId, name) => {
+export const updateProductCategory = (categoryId, name, adminIdentity) => {
+  requireAdminAuth(adminIdentity);
   const normalizedName = normalizeCategory(name);
   const categories = readCategories();
   const current = categories.find(
@@ -157,10 +166,18 @@ export const updateProductCategory = (categoryId, name) => {
       : category,
   );
   persistCategories(nextCategories);
+  logAdminAction({
+    actionType: ADMIN_ACTION_TYPES.CATEGORY_UPDATE,
+    adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+    targetId: current.id,
+    targetType: "category",
+    details: { previousName: current.name, newName: normalizedName },
+  });
   return nextCategories.map(({ name: categoryName }) => categoryName);
 };
 
-export const deleteProductCategory = (categoryId) => {
+export const deleteProductCategory = (categoryId, adminIdentity) => {
+  requireAdminAuth(adminIdentity);
   const categories = readCategories();
   const category = categories.find(
     (entry) =>
@@ -187,6 +204,13 @@ export const deleteProductCategory = (categoryId) => {
 
   const nextCategories = categories.filter((entry) => entry.id !== category.id);
   persistCategories(nextCategories);
+  logAdminAction({
+    actionType: ADMIN_ACTION_TYPES.CATEGORY_DELETE,
+    adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+    targetId: category.id,
+    targetType: "category",
+    details: { name: category.name },
+  });
   return nextCategories.map(({ name }) => name);
 };
 
@@ -282,24 +306,35 @@ const ensureUniqueCouponCode = (coupons, code, ignoredId) => {
   }
 };
 
-export const addCoupon = (coupon) => {
+export const addCoupon = (coupon, adminIdentity) => {
+  requireAdminAuth(adminIdentity);
   const normalized = normalizeCoupon(coupon);
   const coupons = getCoupons();
   ensureUniqueCouponCode(coupons, normalized.code);
-  const nextCoupons = [...coupons, { id: makeId("coupon"), ...normalized }];
+  const newCoupon = { id: makeId("coupon"), ...normalized };
+  const nextCoupons = [...coupons, newCoupon];
   write(COUPONS_STORAGE_KEY, nextCoupons, "Coupon");
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("maliks-coupons-updated"));
   }
+  logAdminAction({
+    actionType: ADMIN_ACTION_TYPES.COUPON_ADD,
+    adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+    targetId: newCoupon.id,
+    targetType: "coupon",
+    details: { code: normalized.code, discountType: normalized.discountType, value: normalized.value },
+  });
   return nextCoupons;
 };
 
-export const updateCoupon = (couponId, updates) => {
+export const updateCoupon = (couponId, updates, adminIdentity) => {
+  requireAdminAuth(adminIdentity);
   const coupons = getCoupons();
   const index = coupons.findIndex(
     (coupon) => String(coupon.id) === String(couponId),
   );
   if (index < 0) throw new Error("Coupon not found.");
+  const previousCoupon = { ...coupons[index] };
   const normalized = normalizeCoupon({ ...coupons[index], ...updates });
   ensureUniqueCouponCode(coupons, normalized.code, coupons[index].id);
   const nextCoupons = [...coupons];
@@ -308,11 +343,20 @@ export const updateCoupon = (couponId, updates) => {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("maliks-coupons-updated"));
   }
+  logAdminAction({
+    actionType: ADMIN_ACTION_TYPES.COUPON_UPDATE,
+    adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+    targetId: couponId,
+    targetType: "coupon",
+    details: { previous: previousCoupon, updated: normalized },
+  });
   return nextCoupons;
 };
 
-export const deleteCoupon = (couponId) => {
+export const deleteCoupon = (couponId, adminIdentity) => {
+  requireAdminAuth(adminIdentity);
   const coupons = getCoupons();
+  const coupon = coupons.find((c) => String(c.id) === String(couponId));
   const nextCoupons = coupons.filter(
     (coupon) => String(coupon.id) !== String(couponId),
   );
@@ -322,6 +366,13 @@ export const deleteCoupon = (couponId) => {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("maliks-coupons-updated"));
   }
+  logAdminAction({
+    actionType: ADMIN_ACTION_TYPES.COUPON_DELETE,
+    adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+    targetId: couponId,
+    targetType: "coupon",
+    details: { code: coupon?.code },
+  });
   return nextCoupons;
 };
 
@@ -352,7 +403,8 @@ export const getClinicSettings = () => {
   return { ...loaded, orderShippingFee: Number(loaded.orderShippingFee) };
 };
 
-export const saveClinicSettings = (settings) => {
+export const saveClinicSettings = (settings, adminIdentity) => {
+  requireAdminAuth(adminIdentity);
   const clinicName =
     typeof settings.clinicName === "string" ? settings.clinicName.trim() : "";
   const supportPhone =
@@ -376,6 +428,7 @@ export const saveClinicSettings = (settings) => {
   if (supportEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail)) {
     throw new Error("Enter a valid support email address.");
   }
+  const previousSettings = getClinicSettings();
   const nextSettings = {
     clinicName,
     supportPhone,
@@ -390,6 +443,13 @@ export const saveClinicSettings = (settings) => {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("maliks-settings-updated"));
   }
+  logAdminAction({
+    actionType: ADMIN_ACTION_TYPES.SETTINGS_UPDATE,
+    adminIdentity: adminIdentity?.id || adminIdentity?.email || adminIdentity,
+    targetId: "clinic_settings",
+    targetType: "settings",
+    details: { previous: previousSettings, updated: nextSettings },
+  });
   return saved;
 };
 

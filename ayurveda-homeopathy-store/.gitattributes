@@ -1,0 +1,3 @@
+# Keep the checkout implementation reviewable even when comparing against
+# legacy revisions that contained accidental control bytes.
+src/components/Checkout.jsx diff

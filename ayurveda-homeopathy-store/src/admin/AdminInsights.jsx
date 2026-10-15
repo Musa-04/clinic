@@ -652,7 +652,7 @@ const orderIdentity = (order) => {
 };
 const Panel = ({ children, className = "" }) => (
   <section
-    className={`min-w-0 rounded-2xl border border-white/7 bg-neutral-900/80 p-4 shadow-sm shadow-black/20 sm:p-5 ${className}`}
+    className={`admin-surface min-w-0 rounded-2xl p-4 sm:p-5 ${className}`}
   >
     {children}
   </section>
@@ -678,7 +678,7 @@ const SectionHeading = ({ eyebrow, title, detail, action }) => (
 );
 
 const MetricCard = ({ label, value, Icon, hint, tint = "text-white" }) => (
-  <article className="min-w-0 rounded-2xl border border-white/7 bg-linear-to-b from-neutral-900 to-neutral-900/70 p-4 shadow-sm shadow-black/20 sm:p-5">
+  <article className="admin-raised min-w-0 rounded-2xl p-4 sm:p-5">
     <div className="flex items-start justify-between gap-2">
       <p className="text-xs font-medium text-stone-400">{label}</p>
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/4">
@@ -945,8 +945,8 @@ const AdminInsights = ({ section = "dashboard", onNavigate, onOpenNav }) => {
     .slice(0, 5);
 
   return (
-    <div className="min-h-full min-w-0 bg-[#0b0d0c] text-stone-100">
-      <header className="sticky top-0 z-20 border-b border-white/7 bg-[#0b0d0c]/95 backdrop-blur-xl">
+    <div className="min-h-full min-w-0">
+      <header className="admin-appbar sticky top-0 z-20 border-b backdrop-blur-xl">
         <div className="mx-auto flex min-h-17 max-w-[1600px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button

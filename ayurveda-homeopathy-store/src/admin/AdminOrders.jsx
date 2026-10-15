@@ -47,6 +47,7 @@ import { pushNotification } from "../utils/notificationStore";
 import AdminProducts from "./AdminProducts";
 import AdminInsights from "./AdminInsights";
 import AdminManagement from "./AdminManagement";
+import "./admin-material.css";
 
 const STATUS_FILTERS = ["ALL", ...ORDER_STATUSES];
 const CANCEL_REASONS = [
@@ -59,16 +60,17 @@ const CANCEL_REASONS = [
 ];
 
 const NAV_ITEMS = [
-  { label: "Dashboard", section: "dashboard", Icon: LayoutDashboard },
-  { label: "Orders", section: "orders", Icon: ClipboardList },
-  { label: "Products", section: "products", Icon: Package },
-  { label: "Categories", section: "categories", Icon: Tag },
-  { label: "Customers", section: "customers", Icon: Users },
-  { label: "Analytics", section: "analytics", Icon: BarChart3 },
-  { label: "Reviews", section: "reviews", Icon: BadgeCheck },
-  { label: "Coupons", section: "coupons", Icon: ShoppingBag },
-  { label: "Settings", section: "settings", Icon: Settings },
+  { label: "Dashboard", section: "dashboard", Icon: LayoutDashboard, group: "Operations" },
+  { label: "Orders", section: "orders", Icon: ClipboardList, group: "Operations" },
+  { label: "Products", section: "products", Icon: Package, group: "Catalog" },
+  { label: "Categories", section: "categories", Icon: Tag, group: "Catalog" },
+  { label: "Customers", section: "customers", Icon: Users, group: "Insights" },
+  { label: "Analytics", section: "analytics", Icon: BarChart3, group: "Insights" },
+  { label: "Reviews", section: "reviews", Icon: BadgeCheck, group: "Insights" },
+  { label: "Coupons", section: "coupons", Icon: ShoppingBag, group: "Configuration" },
+  { label: "Settings", section: "settings", Icon: Settings, group: "Configuration" },
 ];
+const NAV_GROUPS = ["Operations", "Catalog", "Insights", "Configuration"];
 
 const STATUS_STYLE = {
   PENDING: "border-amber-300/15 bg-amber-300/7 text-amber-200",
@@ -656,7 +658,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
   );
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0b0d0c] text-stone-100 lg:flex">
+    <div className="admin-material min-h-screen overflow-x-hidden lg:flex">
       {mobileNavOpen && (
         <button
           type="button"
@@ -667,7 +669,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[min(17rem,calc(100vw-2.5rem))] flex-col border-r border-white/7 bg-neutral-950 shadow-2xl shadow-black/30 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0 lg:shadow-none ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`admin-sidebar fixed inset-y-0 left-0 z-50 flex w-[min(17rem,calc(100vw-2.5rem))] flex-col border-r transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex min-h-20 items-center justify-between border-b border-white/7 px-5">
           <div className="flex min-w-0 items-center gap-3">
@@ -692,37 +694,24 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <p className="px-5 pt-6 pb-2 text-[10px] font-semibold tracking-[0.18em] text-stone-600 uppercase">
-          Workspace
-        </p>
         <nav
           aria-label="Admin sections"
-          className="flex-1 space-y-1 overflow-y-auto px-3 pb-5"
+          className="flex-1 space-y-5 overflow-y-auto px-3 py-5"
         >
-          {NAV_ITEMS.map(({ label, section: itemSection, Icon }) => {
-            const active = section === itemSection;
-            return (
-              <button
-                key={label}
-                type="button"
-                title={`${label} management`}
-                onClick={() => {
-                  setMobileNavOpen(false);
-                  if (!active) onNavigate?.(`/admin/${itemSection}`);
-                }}
-                className={`group relative flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none ${active ? "bg-emerald-500/11 text-emerald-200 before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-emerald-400" : "text-stone-300 hover:bg-white/4 hover:text-white"}`}
-              >
-                <Icon
-                  className={`h-4 w-4 shrink-0 ${active ? "text-emerald-300" : "text-stone-400"}`}
-                  aria-hidden="true"
-                />
-                {label}
-                {active && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
-                )}
-              </button>
-            );
-          })}
+          {NAV_GROUPS.map((group) => (
+            <div key={group}>
+              <p className="admin-on-surface-variant px-3 pb-2 text-[10px] font-semibold tracking-[0.16em] uppercase">{group}</p>
+              <div className="space-y-1">
+                {NAV_ITEMS.filter((item) => item.group === group).map(({ label, section: itemSection, Icon }) => {
+                  const active = section === itemSection;
+                  return <button key={label} type="button" title={`${label} management`} onClick={() => { setMobileNavOpen(false); if (!active) onNavigate?.(`/admin/${itemSection}`); }} className={`admin-nav-item group relative flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none ${active ? "admin-nav-active before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-emerald-700" : ""}`}>
+                    <Icon className={`h-4 w-4 shrink-0 ${active ? "text-emerald-700" : "text-stone-500"}`} aria-hidden="true" />
+                    {label}{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-700" />}
+                  </button>;
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
         <div className="border-t border-white/7 p-4 text-[11px] leading-5 text-stone-500">
           <div className="mb-3 flex items-center justify-between rounded-xl bg-white/3 p-2.5">
@@ -762,7 +751,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
       <main className="min-w-0 flex-1">
         {section === "orders" ? (
           <>
-            <header className="sticky top-0 z-30 border-b border-white/7 bg-[#0b0d0c]/95 backdrop-blur-xl">
+            <header className="admin-appbar sticky top-0 z-30 border-b backdrop-blur-xl">
               <div className="flex min-h-17 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
                 <div className="flex min-w-0 items-center gap-3">
                   <button
@@ -909,7 +898,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
                 ].map(({ label, value, Icon, tint }) => (
                   <article
                     key={label}
-                    className="group min-w-0 rounded-2xl border border-white/7 bg-linear-to-b from-neutral-900 to-neutral-900/70 p-4 shadow-sm shadow-black/20 transition-colors hover:border-white/10 sm:p-5"
+                    className="admin-raised group min-w-0 rounded-2xl p-4 sm:p-5"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-xs font-medium text-stone-400">
@@ -933,7 +922,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
 
               <section
                 aria-label="Order search and filters"
-                className="mt-6 rounded-2xl border border-white/7 bg-neutral-900/80 p-4 shadow-sm shadow-black/20 sm:p-5"
+                className="admin-surface mt-6 rounded-2xl p-4 sm:p-5"
               >
                 <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-[minmax(16rem,1.4fr)_repeat(2,minmax(10rem,0.8fr))_repeat(2,minmax(9rem,0.7fr))] 2xl:items-end">
                   <label className="relative block min-w-0">
