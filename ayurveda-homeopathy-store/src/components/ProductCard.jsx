@@ -3,19 +3,14 @@ import { ImageOff, Eye, Leaf, FlaskConical, ShoppingCart } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { pushNotification } from "../utils/notificationStore";
 
-/**
- * ProductCard
- * Props:
- *   product: { id, name, category, description, price, image }
- */
 const ProductCard = ({ product, onView }) => {
   const { name, category, description, price, image } = product;
 
   const isAyurvedic = category === "Ayurvedic";
 
   const badge = isAyurvedic
-    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-    : "bg-indigo-100 text-indigo-800 border-indigo-200";
+    ? "bg-emerald-900/60 text-emerald-300 border-emerald-700/40"
+    : "bg-indigo-900/60 text-indigo-300 border-indigo-700/40";
 
   const BadgeIcon = isAyurvedic ? Leaf : FlaskConical;
 
@@ -31,9 +26,9 @@ const ProductCard = ({ product, onView }) => {
   };
 
   return (
-    <div className="group flex h-full min-w-0 transform flex-col overflow-hidden rounded-2xl border border-stone-200/90 bg-white shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300/60 hover:shadow-xl">
-      {/* ── Product Image Area ── */}
-      <div className="relative flex aspect-[4/3] w-full flex-col items-center justify-center overflow-hidden border-b border-stone-200/80 bg-linear-to-br from-stone-100 via-emerald-50 to-teal-50">
+    <div className="group flex h-full min-w-0 transform flex-col overflow-hidden rounded-2xl border border-white/8 bg-neutral-900/80 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-emerald-600/30 hover:bg-neutral-900 hover:shadow-xl hover:shadow-emerald-950/30">
+      {/* Product Image Area */}
+      <div className="relative flex aspect-[4/3] w-full flex-col items-center justify-center overflow-hidden border-b border-white/6 bg-neutral-900">
         {image ? (
           <img
             src={image}
@@ -42,18 +37,17 @@ const ProductCard = ({ product, onView }) => {
             loading="lazy"
           />
         ) : (
-          /* Placeholder until real product images are added */
           <>
-            <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-200/80">
-              <ImageOff className="h-7 w-7 text-stone-400" />
+            <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/8">
+              <ImageOff className="h-7 w-7 text-stone-500" />
             </div>
-            <p className="text-[11px] font-medium text-stone-400">
+            <p className="text-[11px] font-medium text-stone-500">
               Product Image
             </p>
           </>
         )}
 
-        {/* Category Badge (top-left of image) */}
+        {/* Category Badge */}
         <span
           className={`absolute top-3 left-3 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${badge} shadow-xs`}
         >
@@ -62,21 +56,19 @@ const ProductCard = ({ product, onView }) => {
         </span>
       </div>
 
-      {/* ── Card Body ── */}
+      {/* Card Body */}
       <div className="flex grow flex-col gap-2 p-4 text-left sm:p-5">
-        {/* Medicine Name */}
-        <h3 className="text-base leading-snug font-bold wrap-break-word text-stone-900 transition-colors group-hover:text-emerald-800 sm:text-lg">
+        <h3 className="text-base leading-snug font-bold wrap-break-word text-white transition-colors group-hover:text-emerald-300 sm:text-lg">
           {name}
         </h3>
 
-        {/* Short Description */}
-        <p className="hidden grow text-xs leading-relaxed wrap-break-word text-stone-500 sm:block sm:text-sm">
+        <p className="hidden grow text-xs leading-relaxed wrap-break-word text-stone-400 sm:block sm:text-sm">
           {description}
         </p>
 
         {/* Price + CTA */}
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-stone-100 pt-2.5">
-          <span className="text-lg font-extrabold text-emerald-800 sm:text-xl">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-white/6 pt-2.5">
+          <span className="text-lg font-extrabold text-emerald-400 sm:text-xl">
             ₹{price.toLocaleString("en-IN")}
           </span>
 
@@ -85,7 +77,7 @@ const ProductCard = ({ product, onView }) => {
               type="button"
               aria-label={`Add ${name} to cart`}
               onClick={handleAddToCart}
-              className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-emerald-800/20 transition-all duration-200 hover:bg-emerald-800 active:bg-emerald-900 sm:text-sm"
+              className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-emerald-950/30 transition-all duration-200 hover:bg-emerald-600 active:bg-emerald-800 sm:text-sm"
             >
               <ShoppingCart className="h-3.5 w-3.5 shrink-0 text-emerald-200" />
               <span>Add</span>
@@ -94,7 +86,7 @@ const ProductCard = ({ product, onView }) => {
             <button
               type="button"
               onClick={() => onView?.(product)}
-              className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-4 py-2 text-xs font-semibold text-stone-700 transition-all duration-200 sm:text-sm"
+              className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-stone-300 transition-all duration-200 hover:border-emerald-500/30 hover:text-emerald-300 sm:text-sm"
             >
               <Eye className="h-3.5 w-3.5 shrink-0 text-stone-400" />
               <span>View</span>

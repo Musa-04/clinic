@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import {
   ArrowLeft,
   BadgePercent,
@@ -78,6 +79,7 @@ const readManagementState = () => {
 };
 
 const AdminManagement = ({ section = "categories", onNavigate, onOpenNav }) => {
+  const { user } = useAuth();
   const [data, setData] = useState(readManagementState);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -150,8 +152,8 @@ const AdminManagement = ({ section = "categories", onNavigate, onOpenNav }) => {
     clearMessages();
     try {
       const next = editingCategory
-        ? updateProductCategory(editingCategory, categoryName)
-        : addProductCategory(categoryName);
+        ? updateProductCategory(editingCategory, categoryName, user)
+        : addProductCategory(categoryName, user);
       setData((current) => ({ ...current, categories: next }));
       setCategoryName("");
       setEditingCategory(null);
@@ -174,7 +176,7 @@ const AdminManagement = ({ section = "categories", onNavigate, onOpenNav }) => {
     )
       return;
     try {
-      const next = deleteProductCategory(category);
+      const next = deleteProductCategory(category, user);
       setData((current) => ({ ...current, categories: next }));
       setNotice("Category deleted.");
     } catch (deleteError) {
@@ -191,8 +193,8 @@ const AdminManagement = ({ section = "categories", onNavigate, onOpenNav }) => {
     clearMessages();
     try {
       const next = editingCoupon
-        ? updateCoupon(editingCoupon, couponForm)
-        : addCoupon(couponForm);
+        ? updateCoupon(editingCoupon, couponForm, user)
+        : addCoupon(couponForm, user);
       setData((current) => ({ ...current, coupons: next }));
       setCouponForm(EMPTY_COUPON);
       setEditingCoupon(null);
@@ -225,7 +227,7 @@ const AdminManagement = ({ section = "categories", onNavigate, onOpenNav }) => {
     )
       return;
     try {
-      setData((current) => ({ ...current, coupons: deleteCoupon(coupon.id) }));
+      setData((current) => ({ ...current, coupons: deleteCoupon(coupon.id, user) }));
       setNotice("Coupon deleted.");
     } catch (deleteError) {
       setError(
@@ -242,7 +244,7 @@ const AdminManagement = ({ section = "categories", onNavigate, onOpenNav }) => {
       const next = updateCoupon(coupon.id, {
         ...coupon,
         active: !coupon.active,
-      });
+      }, user);
       setData((current) => ({ ...current, coupons: next }));
       setNotice(`Coupon ${coupon.active ? "deactivated" : "activated"}.`);
     } catch (updateError) {
@@ -258,7 +260,7 @@ const AdminManagement = ({ section = "categories", onNavigate, onOpenNav }) => {
     event.preventDefault();
     clearMessages();
     try {
-      const settings = saveClinicSettings(settingsForm);
+      const settings = saveClinicSettings(settingsForm, user);
       setData((current) => ({ ...current, settings }));
       setSettingsForm(settings);
       setNotice("Clinic settings saved.");

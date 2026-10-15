@@ -15,10 +15,13 @@
     padding: 0;
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-stone-50 text-stone-800 antialiased font-sans selection:bg-emerald-200 selection:text-emerald-900;
+    background-color: #080d08;
+    color: #d6d3d1;
+    @apply antialiased font-sans selection:bg-emerald-700 selection:text-emerald-50;
   }
 
   #root {
@@ -26,13 +29,96 @@
     max-width: 100%;
     overflow-x: hidden;
   }
+
+  /* Better touch targets for mobile */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply touch-manipulation;
+  }
+
+  /* Prevent zoom on focus for iOS */
+  @media (max-width: 767px) {
+
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Smooth scrolling for anchor links */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus visible for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-emerald-600 ring-offset-2;
+  }
 }
 
-/* Glassmorphism header utility */
+/* Mobile-first utilities */
+@layer utilities {
+
+  /* Safe area insets for notched devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Prevent horizontal overflow */
+  .no-scroll-x {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* Better text wrapping */
+  .text-wrap-anywhere {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* Mobile-first container */
+  .container-mobile {
+    @apply w-full max-w-full px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Touch-friendly tap target */
+  .tap-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+
+  /* Hide scrollbar but keep scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Glassmorphism header utility — dark variant */
 .glass-header {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(8, 13, 8, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  border-bottom-color: rgba(16, 185, 129, 0.12);
 }
 
 /* Infinite marquee for the testimonials section */
@@ -40,6 +126,7 @@
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(-50%);
   }
@@ -60,5 +147,46 @@
 @media (prefers-reduced-motion: reduce) {
   .marquee-track {
     animation: none;
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 639px) {
+
+  /* Reduce padding on mobile */
+  .mobile-p-4 {
+    @apply p-4;
+  }
+
+  .mobile-py-8 {
+    @apply py-8;
+  }
+
+  .mobile-py-12 {
+    @apply py-12;
+  }
+
+  /* Smaller headings on mobile */
+  h1 {
+    @apply text-3xl;
+  }
+
+  h2 {
+    @apply text-2xl;
+  }
+
+  h3 {
+    @apply text-xl;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .tablet-p-6 {
+    @apply p-6;
+  }
+
+  .tablet-py-12 {
+    @apply py-12;
   }
 }

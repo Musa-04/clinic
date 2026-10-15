@@ -100,7 +100,6 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
     closeCheckout,
     clear,
     items,
-    subtotal,
     setCustomerDetails,
     setCheckoutPrepared,
   } = useCart();

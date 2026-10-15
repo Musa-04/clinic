@@ -278,6 +278,26 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
     };
   }, []);
 
+  // Lock background scrolling while the mobile drawer is open.
+  useEffect(() => {
+    if (!mobileNavOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileNavOpen]);
+
+  // Close the mobile drawer on Escape for keyboard users.
+  useEffect(() => {
+    if (!mobileNavOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileNavOpen]);
+
   useEffect(() => {
     if (!confirmAction && !appointmentConfirm) return undefined;
     const handleKeyDown = (event) => {
@@ -378,14 +398,14 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
     setSelectedOrders((current) =>
       allVisibleSelected
         ? current.filter(
-            (id) => !filteredOrders.some((order) => order.id === id),
-          )
+          (id) => !filteredOrders.some((order) => order.id === id),
+        )
         : [
-            ...new Set([
-              ...current,
-              ...filteredOrders.map((order) => order.id),
-            ]),
-          ],
+          ...new Set([
+            ...current,
+            ...filteredOrders.map((order) => order.id),
+          ]),
+        ],
     );
   };
 
@@ -395,7 +415,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
     setPendingActionId(order.id);
     try {
       if (type === "accept") {
-        await adminOrderService.acceptOrder(order.id);
+        await adminOrderService.acceptOrder(order.id, user);
         showToast("Order accepted successfully.");
         pushNotification({
           audience: "user",
@@ -408,6 +428,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
         await adminOrderService.updateOrderStatus(
           order.id,
           confirmAction.status,
+          user,
         );
         showToast(`Order marked ${confirmAction.status.toLowerCase()}.`);
         pushNotification({
@@ -424,7 +445,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
           setActionError("Select a cancellation reason to continue.");
           return;
         }
-        await adminOrderService.cancelOrder(order.id, reason);
+        await adminOrderService.cancelOrder(order.id, reason, user);
         showToast("Order cancelled.");
         pushNotification({
           audience: "user",
@@ -434,7 +455,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
           meta: { orderId: order.id },
         });
       } else if (type === "paymentVerify") {
-        await adminOrderService.verifyPayment(order.id);
+        await adminOrderService.verifyPayment(order.id, user);
         showToast("Payment verified manually.");
         pushNotification({
           audience: "user",
@@ -444,7 +465,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
           meta: { orderId: order.id },
         });
       } else if (type === "paymentFail") {
-        await adminOrderService.failPayment(order.id);
+        await adminOrderService.failPayment(order.id, user);
         showToast("Payment marked as failed.");
         pushNotification({
           audience: "user",
@@ -658,18 +679,11 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
   );
 
   return (
-    <div className="admin-material min-h-screen overflow-x-hidden lg:flex">
-      {mobileNavOpen && (
-        <button
-          type="button"
-          aria-label="Close admin navigation"
-          onClick={() => setMobileNavOpen(false)}
-          className="fixed inset-0 z-40 bg-black/70 lg:hidden"
-        />
-      )}
+    <div className="admin-material min-h-screen overflow-x-hidden flex">
 
       <aside
-        className={`admin-sidebar fixed inset-y-0 left-0 z-50 flex w-[min(17rem,calc(100vw-2.5rem))] flex-col border-r transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"}`}
+        aria-label="Admin navigation"
+        className={`admin-sidebar fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col border-r transition-transform duration-300 ease-out lg:sticky lg:top-0 lg:shrink-0 lg:translate-x-0 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex min-h-20 items-center justify-between border-b border-white/7 px-5">
           <div className="flex min-w-0 items-center gap-3">
@@ -689,7 +703,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
             type="button"
             aria-label="Close admin navigation"
             onClick={() => setMobileNavOpen(false)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-stone-400 transition hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none lg:hidden"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none lg:hidden"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -704,9 +718,9 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
               <div className="space-y-1">
                 {NAV_ITEMS.filter((item) => item.group === group).map(({ label, section: itemSection, Icon }) => {
                   const active = section === itemSection;
-                  return <button key={label} type="button" title={`${label} management`} onClick={() => { setMobileNavOpen(false); if (!active) onNavigate?.(`/admin/${itemSection}`); }} className={`admin-nav-item group relative flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none ${active ? "admin-nav-active before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-emerald-700" : ""}`}>
-                    <Icon className={`h-4 w-4 shrink-0 ${active ? "text-emerald-700" : "text-stone-500"}`} aria-hidden="true" />
-                    {label}{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-700" />}
+                  return <button key={label} type="button" title={`${label} management`} onClick={() => { setMobileNavOpen(false); if (!active) onNavigate?.(`/admin/${itemSection}`); }} className={`admin-nav-item group relative flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none ${active ? "admin-nav-active before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-emerald-400" : ""}`}>
+                    <Icon className={`h-4 w-4 shrink-0 ${active ? "text-emerald-400" : "text-stone-500"}`} aria-hidden="true" />
+                    {label}{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400" />}
                   </button>;
                 })}
               </div>
@@ -747,6 +761,15 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
           <p className="mt-1 text-stone-600">{ORDER_DATA_MODE}</p>
         </div>
       </aside>
+
+      {/* Mobile backdrop: tap to close the off-canvas drawer */}
+      {mobileNavOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileNavOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
       <main className="min-w-0 flex-1">
         {section === "orders" ? (
@@ -1273,8 +1296,8 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
                                     setSelectedOrders((current) =>
                                       current.includes(order.id)
                                         ? current.filter(
-                                            (id) => id !== order.id,
-                                          )
+                                          (id) => id !== order.id,
+                                        )
                                         : [...current, order.id],
                                     )
                                   }
@@ -1532,8 +1555,8 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
             onOpenNav={() => setMobileNavOpen(true)}
           />
         ) : ["dashboard", "customers", "analytics", "reviews"].includes(
-            section,
-          ) ? (
+          section,
+        ) ? (
           <AdminInsights
             section={section}
             onNavigate={onNavigate}
@@ -1982,21 +2005,21 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
               {["PENDING", "CONFIRMED"].includes(
                 normalizeOrderStatus(selectedOrder),
               ) && (
-                <button
-                  type="button"
-                  disabled={pendingActionId === selectedOrder.id}
-                  onClick={() => {
-                    setCancelReason("");
-                    setOtherReason("");
-                    setActionError("");
-                    setConfirmAction({ type: "cancel", order: selectedOrder });
-                    setSelectedOrder(null);
-                  }}
-                  className="min-h-11 rounded-xl border border-rose-300/15 px-4 py-2 text-xs font-semibold text-rose-200 transition hover:bg-rose-300/6 focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:outline-none disabled:opacity-50"
-                >
-                  Cancel Order
-                </button>
-              )}
+                  <button
+                    type="button"
+                    disabled={pendingActionId === selectedOrder.id}
+                    onClick={() => {
+                      setCancelReason("");
+                      setOtherReason("");
+                      setActionError("");
+                      setConfirmAction({ type: "cancel", order: selectedOrder });
+                      setSelectedOrder(null);
+                    }}
+                    className="min-h-11 rounded-xl border border-rose-300/15 px-4 py-2 text-xs font-semibold text-rose-200 transition hover:bg-rose-300/6 focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:outline-none disabled:opacity-50"
+                  >
+                    Cancel Order
+                  </button>
+                )}
             </div>
           </section>
         </div>
@@ -2042,40 +2065,40 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
             </p>
             {(confirmAction.type === "paymentVerify" ||
               confirmAction.type === "paymentFail") && (
-              <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl bg-neutral-950/70 p-4 text-xs">
-                <div className="col-span-2">
-                  <dt className="text-stone-500">Order ID</dt>
-                  <dd className="mt-1 font-mono font-semibold break-all text-emerald-200">
-                    {confirmAction.order.id}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-stone-500">Customer</dt>
-                  <dd className="mt-1 font-medium wrap-break-word text-stone-100">
-                    {confirmAction.order.customer?.name || "Not provided"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-stone-500">Order Total</dt>
-                  <dd className="mt-1 font-semibold text-white">
-                    {money(confirmAction.order.total)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-stone-500">Payment Method</dt>
-                  <dd className="mt-1 font-medium text-stone-100">
-                    {confirmAction.order.payment?.method || "Not provided"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-stone-500">Transaction ID</dt>
-                  <dd className="mt-1 font-mono break-all text-stone-200">
-                    {confirmAction.order.payment?.transactionId ||
-                      "Not provided"}
-                  </dd>
-                </div>
-              </dl>
-            )}
+                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl bg-neutral-950/70 p-4 text-xs">
+                  <div className="col-span-2">
+                    <dt className="text-stone-500">Order ID</dt>
+                    <dd className="mt-1 font-mono font-semibold break-all text-emerald-200">
+                      {confirmAction.order.id}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-stone-500">Customer</dt>
+                    <dd className="mt-1 font-medium wrap-break-word text-stone-100">
+                      {confirmAction.order.customer?.name || "Not provided"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-stone-500">Order Total</dt>
+                    <dd className="mt-1 font-semibold text-white">
+                      {money(confirmAction.order.total)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-stone-500">Payment Method</dt>
+                    <dd className="mt-1 font-medium text-stone-100">
+                      {confirmAction.order.payment?.method || "Not provided"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-stone-500">Transaction ID</dt>
+                    <dd className="mt-1 font-mono break-all text-stone-200">
+                      {confirmAction.order.payment?.transactionId ||
+                        "Not provided"}
+                    </dd>
+                  </div>
+                </dl>
+              )}
             {confirmAction.type === "cancel" && (
               <fieldset className="mt-4 space-y-2">
                 <legend className="sr-only">Cancellation reason</legend>
@@ -2138,7 +2161,7 @@ const AdminOrders = ({ onNavigate, section = "orders" }) => {
                 className="min-h-11 rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-stone-200 transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none"
               >
                 {confirmAction.type === "paymentVerify" ||
-                confirmAction.type === "paymentFail"
+                  confirmAction.type === "paymentFail"
                   ? "Cancel"
                   : confirmAction.type === "accept"
                     ? "Keep Pending"

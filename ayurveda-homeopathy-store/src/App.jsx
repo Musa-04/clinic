@@ -30,6 +30,7 @@ import { saveAppointment } from "./utils/appointmentStorage";
 import { pushNotification } from "./utils/notificationStore";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationToasts from "./components/NotificationToasts";
+import { useSEO } from "./hooks/useSEO";
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -135,6 +136,91 @@ function App() {
   const adminSection = adminRoute?.[1] || "orders";
   const isAdminRoute =
     Boolean(adminRoute) && !isAdminLoginRoute && !isAdminSignupRoute;
+
+  // ── Per-route SEO metadata ──────────────────────────────
+  // Computed once and applied via the useSEO hook (see hooks/useSEO.js).
+  // Private, transactional and admin routes are marked noindex so they
+  // stay out of search results while still getting a meaningful title.
+  const seo = (() => {
+    if (isAdminLoginRoute) {
+      return { title: "Admin Login", path: "/admin/login", noindex: true };
+    }
+    if (isAdminSignupRoute) {
+      return { title: "Admin Sign Up", path: "/admin/signup", noindex: true };
+    }
+    if (isAdminRoute) {
+      return {
+        title: "Admin Dashboard",
+        path: currentPath,
+        noindex: true,
+      };
+    }
+    if (successRoute) {
+      return {
+        title: "Order Confirmed",
+        description:
+          "Thank you for your order at Malik's Polyclinic. Your order has been received and is being processed by our clinic team.",
+        path: currentPath,
+        noindex: true,
+      };
+    }
+    if (ordersRoute) {
+      return {
+        title: "Order Details",
+        description:
+          "View the details and live status of your Malik's Polyclinic order.",
+        path: currentPath,
+        noindex: true,
+      };
+    }
+    if (isOrdersRoute) {
+      return {
+        title: "My Orders",
+        description:
+          "Track and manage all of your Malik's Polyclinic orders in one place.",
+        path: "/orders",
+        noindex: true,
+      };
+    }
+    if (isCheckoutRoute) {
+      return {
+        title: "Checkout",
+        description:
+          "Complete your Malik's Polyclinic order securely with UPI, net banking or cash on delivery.",
+        path: "/checkout",
+        noindex: true,
+      };
+    }
+    if (isProductRoute) {
+      if (selectedProduct) {
+        return {
+          title: selectedProduct.name,
+          description:
+            selectedProduct.description ||
+            `Shop ${selectedProduct.name} — a ${selectedProduct.category} wellness product from Malik's Polyclinic.`,
+          path: `/products/${encodeURIComponent(selectedProduct.id)}`,
+          ogType: "product",
+        };
+      }
+      return { title: "Product Not Found", path: currentPath, noindex: true };
+    }
+    if (isPrivacyRoute) {
+      return {
+        title: "Privacy Policy",
+        description:
+          "Read how Malik's Polyclinic collects, uses and protects your personal and health information when you use our clinic and store.",
+        path: "/privacy-policy",
+      };
+    }
+    // Home page (default)
+    return {
+      title: "Ayurvedic & Homeopathy Clinic & Online Store",
+      description:
+        "Malik's Polyclinic offers expert Ayurvedic and Homeopathic consultations plus natural wellness products. Book an appointment or shop online today.",
+      path: "/",
+    };
+  })();
+  useSEO(seo);
 
   const openProduct = (product) => navigate(`/products/${product.id}`);
 

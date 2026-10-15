@@ -75,7 +75,7 @@ const HowItWorks = () => {
             aria-hidden="true"
           />
 
-          {steps.map((step, idx) => {
+          {steps.map((step, _idx) => {
             const Icon = step.icon;
             return (
               <div

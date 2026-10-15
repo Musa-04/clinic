@@ -76,8 +76,6 @@ export const CartProvider = ({ children }) => {
     }
   }, [items]);
 
-  const findIndex = (productId) => items.findIndex((i) => i.id === productId);
-
   const addItem = (product, quantity = 1) => {
     setItems((prev) => {
       const idx = prev.findIndex((p) => String(p.id) === String(product.id));
