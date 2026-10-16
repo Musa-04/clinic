@@ -555,6 +555,9 @@ export const generateOrderId = (orders = getOrders(), date = new Date()) => {
   return `${prefix}${String(nextSequence).padStart(4, "0")}`;
 };
 
+const roundMoney = (value) =>
+  Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
 export const calculateOrderTotals = (items = [], extras = {}) => {
   const subtotal = items.reduce(
     (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
@@ -568,12 +571,22 @@ export const calculateOrderTotals = (items = [], extras = {}) => {
     ? Math.max(0, Number(extras.discount))
     : 0;
 
+  // Round every component to 2 decimals using the same rule as the Edge Function
+  // (money()) so the amount displayed here is identical to the server total.
+  const roundedSubtotal = roundMoney(subtotal);
+  const roundedShipping = roundMoney(shipping);
+  const roundedTax = roundMoney(tax);
+  const roundedDiscount = roundMoney(discount);
+
   return {
-    subtotal,
-    shipping,
-    tax,
-    discount,
-    total: Math.max(0, subtotal + shipping + tax - discount),
+    subtotal: roundedSubtotal,
+    shipping: roundedShipping,
+    tax: roundedTax,
+    discount: roundedDiscount,
+    total: Math.max(
+      0,
+      roundMoney(roundedSubtotal + roundedShipping + roundedTax - roundedDiscount),
+    ),
   };
 };
 

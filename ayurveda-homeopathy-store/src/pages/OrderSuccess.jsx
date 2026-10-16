@@ -1,14 +1,60 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { CheckCircle2, PackageCheck } from "lucide-react";
 import { formatOrderDate, getOrderById } from "../utils/orderStorage";
+import {
+  isConfigured,
+  getOrderByAccessToken,
+  getOrderByIdFromSupabase,
+} from "../utils/orderStorageSupabase";
 
-const OrderSuccess = ({ orderId, onNavigate }) => {
-  const order = getOrderById(orderId);
+const OrderSuccess = ({ orderId, orderAccessToken, onNavigate }) => {
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadOrder = async () => {
+      try {
+        setLoading(true);
+        if (isConfigured()) {
+          if (orderAccessToken) {
+            const supabaseOrder = await getOrderByAccessToken(orderAccessToken);
+            if (mounted) setOrder(supabaseOrder);
+          } else {
+            const supabaseOrder = await getOrderByIdFromSupabase(orderId);
+            if (mounted) setOrder(supabaseOrder);
+          }
+        } else {
+          if (mounted) setOrder(getOrderById(orderId));
+        }
+      } catch {
+        if (mounted) {
+          setOrder(getOrderById(orderId));
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadOrder();
+    return () => {
+      mounted = false;
+    };
+  }, [orderId, orderAccessToken]);
 
   return (
     <main className="min-h-[70vh] bg-neutral-950 px-4 py-12 text-stone-100 sm:py-20">
-      <section className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-neutral-900 p-6 text-center sm:p-10">
-        {order ? (
+      {loading ? (
+        <section className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-neutral-900 p-6 text-center sm:p-10">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-10 w-10 rounded-full border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-stone-400">Loading order...</p>
+          </div>
+        </section>
+      ) : (
+        <section className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-neutral-900 p-6 text-center sm:p-10">
+          {order ? (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-emerald-400/20 bg-emerald-400/10 text-emerald-300">
               <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
@@ -84,8 +130,9 @@ const OrderSuccess = ({ orderId, onNavigate }) => {
               View Orders
             </button>
           </>
-        )}
-      </section>
+          )}
+        </section>
+      )}
     </main>
   );
 };

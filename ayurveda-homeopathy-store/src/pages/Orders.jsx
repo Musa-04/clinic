@@ -2,17 +2,74 @@ import React, { useEffect, useState } from "react";
 import { ArrowRight, Package, ShoppingBag } from "lucide-react";
 import { formatOrderDate, getOrders } from "../utils/orderStorage";
 import { normalizeOrderStatus } from "../services/adminOrderService";
+import {
+  isConfigured,
+  getOrderByAccessToken,
+} from "../utils/orderStorageSupabase";
+
+const ORDERS_TOKEN_KEY = "maliks_last_order_access_token";
 
 const Orders = ({ onNavigate }) => {
-  const [orders, setOrders] = useState(getOrders);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const refreshOrders = () => setOrders(getOrders());
-    window.addEventListener("storage", refreshOrders);
-    window.addEventListener("maliks-orders-updated", refreshOrders);
+    let mounted = true;
+
+    const loadOrders = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        if (isConfigured()) {
+          // Secure guest order retrieval: only the order whose access token
+          // was issued at checkout and stored in localStorage is visible.
+          // Do not expose all orders via phone/email lookup.
+          const token =
+            typeof window !== "undefined"
+              ? window.localStorage.getItem(ORDERS_TOKEN_KEY)
+              : null;
+          if (token) {
+            const order = await getOrderByAccessToken(token);
+            if (mounted) setOrders(order ? [order] : []);
+          } else {
+            if (mounted) setOrders([]);
+          }
+        } else {
+          if (mounted) setOrders(getOrders());
+        }
+      } catch {
+        if (mounted) {
+          setError("Orders could not be loaded. Please try again.");
+          setOrders(getOrders());
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadOrders();
+
+    const handleStorage = () => {
+      if (!isConfigured()) {
+        setOrders(getOrders());
+      }
+    };
+
+    const handleOrdersUpdated = async () => {
+      if (isConfigured()) {
+        await loadOrders();
+      } else {
+        setOrders(getOrders());
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("maliks-orders-updated", handleOrdersUpdated);
     return () => {
-      window.removeEventListener("storage", refreshOrders);
-      window.removeEventListener("maliks-orders-updated", refreshOrders);
+      mounted = false;
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("maliks-orders-updated", handleOrdersUpdated);
     };
   }, []);
 
@@ -26,7 +83,31 @@ const Orders = ({ onNavigate }) => {
           Your Orders
         </h1>
 
-        {orders.length === 0 ? (
+        {loading ? (
+          <section className="mt-8 rounded-2xl border border-white/10 bg-neutral-900 p-8 text-center sm:p-12">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-10 w-10 rounded-full border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-stone-400">Loading orders...</p>
+            </div>
+          </section>
+        ) : error ? (
+          <section className="mt-8 rounded-2xl border border-white/10 bg-neutral-900 p-8 text-center sm:p-12">
+            <div className="flex flex-col items-center gap-3">
+              <ShoppingBag className="mx-auto h-10 w-10 text-stone-400" aria-hidden="true" />
+              <h2 className="mt-4 text-xl font-semibold text-white">
+                Orders unavailable
+              </h2>
+              <p className="mt-2 text-sm text-stone-400">{error}</p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-6 min-h-12 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none"
+              >
+                Retry
+              </button>
+            </div>
+          </section>
+        ) : orders.length === 0 ? (
           <section className="mt-8 rounded-2xl border border-white/10 bg-neutral-900 p-8 text-center sm:p-12">
             <ShoppingBag
               className="mx-auto h-10 w-10 text-emerald-300"

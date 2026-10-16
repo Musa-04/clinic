@@ -40,37 +40,64 @@ function App() {
     "Homeopathic",
   ]);
   const [catalogError, setCatalogError] = useState("");
+  const [isCatalogLoading, setIsCatalogLoading] = useState(true);
   const { openCheckout, closeCheckout } = useCart();
 
   useEffect(() => {
-    const refreshCatalog = () => {
+    let mounted = true;
+
+    const refreshCatalog = async () => {
       try {
-        setCatalogProducts(getProducts());
-        setProductCategories(getProductCategories());
-        setCatalogError("");
+        setIsCatalogLoading(true);
+        const loadedProducts = await getProducts();
+        const cats = getProductCategories();
+        if (mounted) {
+          setCatalogProducts(loadedProducts);
+          setProductCategories(cats);
+          setCatalogError("");
+        }
       } catch {
-        setCatalogProducts([]);
-        setCatalogError(
-          "The product catalog could not be loaded from browser storage.",
-        );
+        if (mounted) {
+          setCatalogProducts([]);
+          setCatalogError(
+            "The product catalog could not be loaded from Supabase. Please check your connection and try again.",
+          );
+        }
+      } finally {
+        if (mounted) setIsCatalogLoading(false);
       }
     };
+
     refreshCatalog();
-    const handleStorage = (event) => {
+
+    const handleStorage = async (event) => {
       if (
         event.key === null ||
         event.key === "maliks_products" ||
         event.key === "maliks_product_categories"
-      )
-        refreshCatalog();
+      ) {
+        await refreshCatalog();
+      }
     };
+
+    const handleProductsUpdated = async () => {
+      await refreshCatalog();
+    };
+
     window.addEventListener("storage", handleStorage);
-    window.addEventListener("maliks-products-updated", refreshCatalog);
-    window.addEventListener("maliks-categories-updated", refreshCatalog);
+    window.addEventListener("maliks-products-updated", handleProductsUpdated);
+    window.addEventListener("maliks-categories-updated", handleProductsUpdated);
     return () => {
+      mounted = false;
       window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("maliks-products-updated", refreshCatalog);
-      window.removeEventListener("maliks-categories-updated", refreshCatalog);
+      window.removeEventListener(
+        "maliks-products-updated",
+        handleProductsUpdated,
+      );
+      window.removeEventListener(
+        "maliks-categories-updated",
+        handleProductsUpdated,
+      );
     };
   }, []);
 
@@ -123,6 +150,9 @@ function App() {
     : successRoute
       ? decodeURIComponent(successRoute[1])
       : null;
+  const successToken = successRoute
+    ? new URLSearchParams(new URL(currentPath, window.location.origin).search).get("token") || ""
+    : "";
   const isOrdersRoute = currentPath === "/orders" || currentPath === "/orders/";
   const isPrivacyRoute =
     currentPath === "/privacy-policy" || currentPath === "/privacy-policy/";
@@ -349,7 +379,7 @@ function App() {
         {ordersRoute ? (
           <OrderDetails orderId={orderId} onNavigate={navigate} />
         ) : successRoute ? (
-          <OrderSuccess orderId={orderId} onNavigate={navigate} />
+          <OrderSuccess orderId={orderId} orderAccessToken={successToken} onNavigate={navigate} />
         ) : isOrdersRoute ? (
           <Orders onNavigate={navigate} />
         ) : isPrivacyRoute ? (
@@ -717,8 +747,10 @@ function App() {
 
         {/* Checkout */}
         <Checkout
-          onOrderPlaced={(order) =>
-            navigate(`/order-success/${encodeURIComponent(order.id)}`)
+          onOrderPlaced={({ orderId, orderAccessToken }) =>
+            navigate(
+              `/order-success/${encodeURIComponent(orderId)}?token=${encodeURIComponent(orderAccessToken || "")}`
+            )
           }
           onClose={() => navigate("/#medicines")}
           onViewOrders={() => navigate("/orders")}

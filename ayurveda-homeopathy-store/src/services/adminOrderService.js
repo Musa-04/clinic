@@ -3,9 +3,20 @@ import {
   getOrdersStrict as readOrders,
   normalizePaymentStatus,
   updateOrderStrict as updateOrder,
+  seedDefaultOrders,
 } from "../utils/orderStorage";
 import { logAdminAction, ADMIN_ACTION_TYPES } from "../utils/adminActionLog";
 import { requireAdminAuth } from "../utils/adminAuth";
+import {
+  isConfigured,
+  getAllOrdersFromSupabase,
+  getOrderByIdFromSupabase,
+  acceptOrderInSupabase,
+  updateOrderStatusInSupabase,
+  cancelOrderInSupabase,
+  verifyPaymentInSupabase,
+  failPaymentInSupabase,
+} from "../utils/orderStorageSupabase";
 
 export const ORDER_STATUSES = [
   "PENDING",
@@ -119,19 +130,31 @@ const persistStatus = (
 
 const localOrderAdapter = {
   async getOrders() {
+    if (isConfigured()) {
+      return getAllOrdersFromSupabase();
+    }
     return readAdminOrders();
   },
 
   async refreshOrders() {
+    if (isConfigured()) {
+      return getAllOrdersFromSupabase();
+    }
     return readAdminOrders();
   },
 
   async getOrderById(orderId) {
+    if (isConfigured()) {
+      return getOrderByIdFromSupabase(orderId);
+    }
     const order = readOrderById(orderId);
     return order ? normalizeOrder(order) : null;
   },
 
   async acceptOrder(orderId, adminIdentity) {
+    if (isConfigured()) {
+      return acceptOrderInSupabase(orderId, adminIdentity);
+    }
     requireAdminAuth(adminIdentity);
     const order = getOrderOrThrow(orderId);
     if (normalizeOrderStatus(order) !== "PENDING") {
@@ -149,6 +172,9 @@ const localOrderAdapter = {
   },
 
   async updateOrderStatus(orderId, nextStatus, adminIdentity) {
+    if (isConfigured()) {
+      return updateOrderStatusInSupabase(orderId, nextStatus, adminIdentity);
+    }
     requireAdminAuth(adminIdentity);
     const order = getOrderOrThrow(orderId);
     const currentStatus = normalizeOrderStatus(order);
@@ -175,6 +201,9 @@ const localOrderAdapter = {
   },
 
   async cancelOrder(orderId, reason, adminIdentity) {
+    if (isConfigured()) {
+      return cancelOrderInSupabase(orderId, reason, adminIdentity);
+    }
     requireAdminAuth(adminIdentity);
     const order = getOrderOrThrow(orderId);
     const currentStatus = normalizeOrderStatus(order);
@@ -207,6 +236,9 @@ const localOrderAdapter = {
   },
 
   async verifyPayment(orderId, adminIdentity) {
+    if (isConfigured()) {
+      return verifyPaymentInSupabase(orderId, adminIdentity);
+    }
     requireAdminAuth(adminIdentity);
     const result = persistPaymentStatus(
       orderId,
@@ -226,6 +258,9 @@ const localOrderAdapter = {
   },
 
   async failPayment(orderId, adminIdentity) {
+    if (isConfigured()) {
+      return failPaymentInSupabase(orderId, adminIdentity);
+    }
     requireAdminAuth(adminIdentity);
     const result = persistPaymentStatus(orderId, "FAILED", "failedAt", adminIdentity);
     logAdminAction({

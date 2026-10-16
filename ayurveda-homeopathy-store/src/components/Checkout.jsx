@@ -21,11 +21,16 @@ import {
   saveOrder,
 } from "../utils/orderStorage";
 import {
+  createOrderViaSupabase,
+  isConfigured,
+} from "../utils/orderStorageSupabase";
+import {
   calculateCouponDiscount,
   getActiveCouponByCode,
   getClinicSettings,
 } from "../utils/adminManagementStorage";
 import { pushNotification } from "../utils/notificationStore";
+import { supabase } from "../supabaseClient";
 
 import clinicQrImage from "../assets/clinic-upi-qr.png";
 
@@ -81,17 +86,36 @@ const isPlausibleTransactionId = (value) => {
 };
 
 // Block reuse of a transaction ID already used by a live (non-cancelled) order.
-const isTransactionIdReused = (cleanedId) => {
+const isTransactionIdReused = async (cleanedId) => {
   if (!cleanedId) return false;
+  // Check localStorage first
   try {
-    return getOrders().some(
+    const localReused = getOrders().some(
       (order) =>
         order?.cancellation?.cancelled !== true &&
         sanitizeTransactionId(order.payment?.transactionId) === cleanedId,
     );
+    if (localReused) return true;
   } catch {
-    return false;
+    // ignore
   }
+  // Check Supabase when configured
+  if (isConfigured()) {
+    try {
+      const { data: orders, error } = await supabase
+        .from("orders")
+        .select("id, cancellation, payment(method, transaction_id)")
+        .neq("order_status", "CANCELLED");
+      if (!error && orders) {
+        return orders.some(
+          (order) => sanitizeTransactionId(order.payment?.transaction_id) === cleanedId,
+        );
+      }
+    } catch {
+      console.error("create-order: transaction ID reuse check failed via Supabase");
+    }
+  }
+  return false;
 };
 
 const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
@@ -161,6 +185,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
+  const [pendingTotals, setPendingTotals] = useState(null);
 
   // --------------------------------------------------
   // UPI ID
@@ -182,14 +207,49 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
     discount: orderDiscount,
     total: totalAmount,
   } = calculateOrderTotals(items, { shipping: shippingFee, discount });
-  const isFreeDelivery = shipping === 0;
+  // When the server recomputes a different total, show its authoritative breakdown
+  // instead of the locally computed figures so the customer confirms the real amount.
+  const displayTotals = pendingTotals ?? {
+    subtotal: calculatedSubtotal,
+    shipping,
+    tax,
+    discount: orderDiscount,
+    total: totalAmount,
+  };
+  const displaySubtotal = displayTotals.subtotal;
+  const displayShipping = displayTotals.shipping;
+  const displayTax = displayTotals.tax;
+  const displayOrderDiscount = displayTotals.discount;
+  const displayTotal = displayTotals.total;
+  const isFreeDelivery = displayShipping === 0;
 
   // --------------------------------------------------
   // RESET WHEN CHECKOUT OPENS
   // --------------------------------------------------
 
   useEffect(() => {
-    const readShippingFee = () => {
+    // Reads the shipping fee from Supabase when configured (the same
+    // server-side source of truth the Edge Function uses), so shipping is
+    // consistent across all browsers. localStorage is per-browser and would
+    // show different values in Chrome vs Edge. Falls back to localStorage
+    // when Supabase is not configured or the query fails.
+    const readShippingFee = async () => {
+      if (isConfigured()) {
+        try {
+          const { data, error } = await supabase
+            .from("clinic_settings")
+            .select("order_shipping_fee")
+            .limit(1)
+            .maybeSingle();
+          if (!error && data) {
+            const fee = Number(data?.order_shipping_fee);
+            setShippingFee(Number.isFinite(fee) && fee >= 0 ? fee : 0);
+            return;
+          }
+        } catch {
+          // fall through to localStorage fallback below
+        }
+      }
       try {
         setShippingFee(Number(getClinicSettings().orderShippingFee) || 0);
       } catch {
@@ -226,6 +286,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
     setCouponInput("");
     setAppliedCoupon(null);
     setCouponError("");
+    setPendingTotals(null);
 
     setTimeout(() => {
       document.getElementById("checkout-fullName")?.focus();
@@ -403,9 +464,6 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
     } else if (!isPlausibleTransactionId(transactionId)) {
       newErrors.transactionId =
         "Enter a valid UPI transaction / UTR reference (6–35 letters or digits).";
-    } else if (isTransactionIdReused(cleanedId)) {
-      newErrors.transactionId =
-        "This transaction ID has already been used for another order.";
     }
 
     if (!paymentConfirmed) {
@@ -420,7 +478,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
   // PAYMENT CONTINUE
   // --------------------------------------------------
 
-  const handlePaymentContinue = () => {
+  const handlePaymentContinue = async () => {
     if (paymentMethod !== "upi") {
       return;
     }
@@ -431,6 +489,18 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
     }
 
     if (!validatePayment()) {
+      return;
+    }
+
+    // Check transaction ID reuse asynchronously (Supabase + localStorage)
+    const cleanedId = sanitizeTransactionId(transactionId);
+    const reused = await isTransactionIdReused(cleanedId);
+    if (reused) {
+      setPaymentErrors({
+        ...paymentErrors,
+        transactionId:
+          "This transaction ID has already been used for another order.",
+      });
       return;
     }
 
@@ -446,7 +516,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
   // PLACE ORDER
   // --------------------------------------------------
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async (acceptedTotal = null) => {
     if (isSubmitting) return;
 
     if (!items?.length || !validateDelivery()) {
@@ -487,14 +557,11 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
     setIsSubmitting(true);
 
     const now = new Date().toISOString();
-    const order = {
-      id: generateOrderId(),
-      createdAt: now,
-      customer: {
-        name: form.fullName.trim(),
-        phone: form.phone.trim(),
-        email: form.email.trim(),
-      },
+    const orderData = {
+      orderId: generateOrderId(),
+      customerName: form.fullName.trim(),
+      customerPhone: form.phone.trim(),
+      customerEmail: form.email.trim() || null,
       deliveryAddress: {
         address: form.address.trim(),
         city: form.city.trim(),
@@ -504,8 +571,15 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
       },
       notes: form.message.trim(),
       couponCode: appliedCoupon?.code || "",
+      subtotal: calculatedSubtotal,
+      shipping,
+      tax,
+      discount: orderDiscount,
+      total: totalAmount,
+      // When the customer confirms a server-recomputed total, echo it back so the
+      // Edge Function can verify they accepted the authoritative amount.
+      ...(Number.isFinite(acceptedTotal) ? { acceptedTotal } : {}),
       items: items.map(({ id, name, image, price, quantity }) => ({
-        id,
         productId: id,
         name,
         image,
@@ -513,63 +587,118 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
         quantity: Number(quantity) || 1,
         subtotal: (Number(price) || 0) * (Number(quantity) || 1),
       })),
-      subtotal: calculatedSubtotal,
-      shipping,
-      tax,
-      discount: orderDiscount,
-      total: totalAmount,
       payment: {
         method: "UPI",
         transactionId: sanitizeTransactionId(transactionId),
-        status: "Pending Verification",
-      },
-      orderStatus: "PENDING",
-      cancellation: {
-        cancelled: false,
-        reason: "",
-        cancelledAt: null,
       },
     };
 
     try {
-      saveOrder(order);
+      let orderId;
+      let orderAccessToken;
+      if (isConfigured()) {
+        // Save to Supabase via secure Edge Function (server-side price validation)
+        const result = await createOrderViaSupabase(orderData);
+        orderId = result.orderId;
+        orderAccessToken = result.orderAccessToken;
+      } else {
+        // Fallback to localStorage
+        const order = {
+          id: orderData.orderId,
+          createdAt: now,
+          customer: {
+            name: orderData.customerName,
+            phone: orderData.customerPhone,
+            email: orderData.customerEmail || "",
+          },
+          deliveryAddress: orderData.deliveryAddress,
+          notes: orderData.notes,
+          couponCode: orderData.couponCode,
+          items: orderData.items,
+          subtotal: orderData.subtotal,
+          shipping: orderData.shipping,
+          tax: orderData.tax,
+          discount: orderData.discount,
+          total: orderData.total,
+          payment: {
+            method: orderData.payment.method,
+            transactionId: orderData.payment.transactionId,
+            status: "Pending Verification",
+          },
+          orderStatus: "PENDING",
+          cancellation: {
+            cancelled: false,
+            reason: "",
+            cancelledAt: null,
+          },
+        };
+        saveOrder(order);
+        orderId = order.id;
+      }
+
       try {
         window.localStorage.setItem(ORDER_COOLDOWN_KEY, String(Date.now()));
       } catch {
         // Cooldown persistence is best-effort; the order was still saved.
       }
+
       pushNotification({
         audience: "admin",
         type: "order",
         title: "New order received",
-        message: `${order.customer.name} placed order ${order.id} for ₹${Number(
-          order.total,
+        message: `${orderData.customerName} placed order ${orderId} for ₹${Number(
+          orderData.total,
         ).toLocaleString("en-IN")}.`,
-        meta: { orderId: order.id },
+        meta: { orderId },
       });
       pushNotification({
         audience: "user",
         type: "success",
         title: "Order placed successfully",
-        message: `Your order ${order.id} is awaiting payment verification.`,
-        meta: { orderId: order.id },
+        message: `Your order ${orderId} is awaiting payment verification.`,
+        meta: { orderId },
       });
-      setOrderNumber(order.id);
+      setOrderNumber(orderId);
+      if (orderAccessToken) {
+        try {
+          window.localStorage.setItem("maliks_last_order_access_token", orderAccessToken);
+        } catch {
+          // localStorage best-effort; token is also in URL
+        }
+      }
       setOrderPlaced(true);
       clear();
       closeCheckout();
-      onOrderPlaced?.(order);
-    } catch {
-      setOrderError("We could not save your order. Please try again.");
+      onOrderPlaced?.({ orderId, orderAccessToken });
+    } catch (err) {
+      // If the server recomputed a different total, show the authoritative amount
+      // and require explicit confirmation. The order is not created and the cart is
+      // kept intact so the customer can review and confirm the real amount.
+      if (err?.code === "TOTALS_CHANGED" && err?.totals) {
+        setPendingTotals(err.totals);
+        setOrderError("");
+        return;
+      }
+      // Surface the actual error from the Edge Function (sanitized: no PII, no secrets)
+      const message = err?.message || "We could not save your order. Please try again.";
+      setOrderError(message);
       pushNotification({
         audience: "user",
         type: "warning",
         title: "Order not placed",
-        message: "We could not save your order. Please try again.",
+        message: message,
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleConfirmChangedTotals = () => {
+    if (!pendingTotals) return;
+    const accepted = Number(pendingTotals.total);
+    setPendingTotals(null);
+    setOrderError("");
+    handlePlaceOrder(accepted);
   };
 
   // --------------------------------------------------
@@ -1647,6 +1776,52 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     </p>
                   )}
 
+                  {pendingTotals && (
+                    <div
+                      role="alert"
+                      className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4"
+                    >
+                      <p className="text-sm font-bold text-amber-800">
+                        The order total has changed
+                      </p>
+                      <p className="mt-1 text-sm text-amber-700">
+                        We refreshed your order and the total is now{" "}
+                        <span className="font-bold">
+                          ₹{Number(displayTotal).toLocaleString("en-IN")}
+                        </span>{" "}
+                        (subtotal ₹
+                        {Number(displaySubtotal).toLocaleString("en-IN")}, shipping{" "}
+                        {isFreeDelivery
+                          ? "FREE"
+                          : `₹${Number(displayShipping).toLocaleString("en-IN")}`}
+                        , tax ₹{Number(displayTax).toLocaleString("en-IN")}). Please
+                        confirm the updated amount to place your order.
+                      </p>
+                      <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row">
+                        <button
+                          type="button"
+                          onClick={() => setPendingTotals(null)}
+                          className="min-h-10 rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-bold text-stone-700 transition hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleConfirmChangedTotals}
+                          disabled={isSubmitting}
+                          className="flex min-h-10 items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-2 text-sm font-bold text-white transition hover:bg-amber-700 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none disabled:opacity-60"
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                          {isSubmitting
+                            ? "Placing Order…"
+                            : `Confirm ₹${Number(displayTotal).toLocaleString(
+                                "en-IN",
+                              )} & Place Order`}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
                     <button
                       type="button"
@@ -1656,21 +1831,27 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                       Back
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={handlePlaceOrder}
-                      disabled={isSubmitting}
-                      className={`flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-emerald-700 px-8 py-3 text-sm font-bold text-white shadow-md transition hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none ${
-                        isSubmitting
-                          ? "cursor-not-allowed bg-stone-300"
-                          : "bg-emerald-700 hover:bg-emerald-800"
-                      }`}
-                    >
-                      <Lock className="h-4 w-4" />
-                      {isSubmitting
-                        ? "Placing Order…"
-                        : "Confirm Payment & Place Order"}
-                    </button>
+                    {/* When pendingTotals is set, the main Place Order button is hidden so the customer
+                        must explicitly confirm the server-recomputed total via the amber banner button.
+                        Clicking the main button without acceptedTotal would trigger TOTALS_CHANGED again,
+                        creating an infinite loop. */}
+                    {!pendingTotals && (
+                      <button
+                        type="button"
+                        onClick={handlePlaceOrder}
+                        disabled={isSubmitting}
+                        className={`flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-emerald-700 px-8 py-3 text-sm font-bold text-white shadow-md transition hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none ${
+                          isSubmitting
+                            ? "cursor-not-allowed bg-stone-300"
+                            : "bg-emerald-700 hover:bg-emerald-800"
+                        }`}
+                      >
+                        <Lock className="h-4 w-4" />
+                        {isSubmitting
+                          ? "Placing Order…"
+                          : "Confirm Payment & Place Order"}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -1736,7 +1917,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     <span className="text-stone-600">Subtotal</span>
 
                     <span className="font-semibold text-stone-900">
-                      ₹{Number(calculatedSubtotal).toLocaleString("en-IN")}
+                      ₹{Number(displaySubtotal).toLocaleString("en-IN")}
                     </span>
                   </div>
 
@@ -1791,11 +1972,11 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     )}
                   </div>
 
-                  {orderDiscount > 0 && (
+                  {displayOrderDiscount > 0 && (
                     <div className="mt-3 flex items-center justify-between text-sm">
                       <span className="text-stone-600">Discount</span>
                       <span className="font-semibold text-emerald-700">
-                        −₹{Number(orderDiscount).toLocaleString("en-IN")}
+                        −₹{Number(displayOrderDiscount).toLocaleString("en-IN")}
                       </span>
                     </div>
                   )}
@@ -1806,7 +1987,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     <span className="text-stone-600">Tax</span>
 
                     <span className="font-semibold text-stone-900">
-                      ₹{Number(tax).toLocaleString("en-IN")}
+                      ₹{Number(displayTax).toLocaleString("en-IN")}
                     </span>
                   </div>
 
@@ -1820,7 +2001,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                     >
                       {isFreeDelivery
                         ? "FREE"
-                        : `₹${Number(shipping).toLocaleString("en-IN")}`}
+                        : `₹${Number(displayShipping).toLocaleString("en-IN")}`}
                     </span>
                   </div>
 
@@ -1845,7 +2026,7 @@ const Checkout = ({ onOrderPlaced, onClose, onViewOrders }) => {
                       <span className="font-bold text-stone-900">Total</span>
 
                       <span className="text-xl font-extrabold text-stone-900">
-                        ₹{totalAmount.toLocaleString("en-IN")}
+                        ₹{displayTotal.toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>

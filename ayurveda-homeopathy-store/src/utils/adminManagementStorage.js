@@ -1,6 +1,8 @@
 import { getProducts } from "./productStorage";
+import { supabase } from "../supabaseClient";
 import { logAdminAction, ADMIN_ACTION_TYPES } from "./adminActionLog";
 import { requireAdminAuth } from "./adminAuth";
+import { isConfigured } from "./orderStorageSupabase";
 
 export const PRODUCT_CATEGORIES_STORAGE_KEY = "maliks_product_categories";
 export const COUPONS_STORAGE_KEY = "maliks_coupons";
@@ -403,7 +405,7 @@ export const getClinicSettings = () => {
   return { ...loaded, orderShippingFee: Number(loaded.orderShippingFee) };
 };
 
-export const saveClinicSettings = (settings, adminIdentity) => {
+export const saveClinicSettings = async (settings, adminIdentity) => {
   requireAdminAuth(adminIdentity);
   const clinicName =
     typeof settings.clinicName === "string" ? settings.clinicName.trim() : "";
@@ -440,6 +442,31 @@ export const saveClinicSettings = (settings, adminIdentity) => {
     nextSettings,
     "Clinic settings",
   );
+
+  // Persist to Supabase as well so every browser (Chrome, Edge, etc.) sees
+  // the same shipping fee. localStorage is per-browser; Supabase is shared.
+  if (isConfigured()) {
+    try {
+      const { data: existing } = await supabase
+        .from("clinic_settings")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+      if (existing) {
+        await supabase
+          .from("clinic_settings")
+          .update({ order_shipping_fee: orderShippingFee })
+          .eq("id", existing.id);
+      } else {
+        await supabase
+          .from("clinic_settings")
+          .insert({ order_shipping_fee: orderShippingFee });
+      }
+    } catch {
+      // Supabase sync is best-effort; localStorage is already saved and is the fallback.
+    }
+  }
+
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("maliks-settings-updated"));
   }

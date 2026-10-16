@@ -27,30 +27,16 @@ const EMPTY_FORM = {
   price: "",
   image: "",
 };
-const MAX_PRODUCT_IMAGE_SIZE = 1024 * 1024;
+const MAX_PRODUCT_IMAGE_SIZE = 1024 * 1024 * 5;
 const PRODUCT_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-const getInitialProductState = () => {
-  try {
-    return {
-      products: getProducts(),
-      categories: getProductCategories(),
-      loadError: "",
-    };
-  } catch {
-    return {
-      products: [],
-      categories: ["Ayurvedic", "Homeopathic"],
-      loadError: "Products could not be loaded from browser storage.",
-    };
-  }
-};
-
 const AdminProducts = ({ onNavigate, onOpenNav }) => {
-  const [initialProductState] = useState(getInitialProductState);
-  const [products, setProducts] = useState(initialProductState.products);
-  const [categories, setCategories] = useState(initialProductState.categories);
-  const [loadError, setLoadError] = useState(initialProductState.loadError);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(["Ayurvedic", "Homeopathic"]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -61,28 +47,44 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
   const [imageName, setImageName] = useState("");
   const [deletingProduct, setDeletingProduct] = useState(null);
 
-  const refreshProducts = () => {
+  const refreshProducts = async () => {
+    setIsLoading(true);
     try {
-      setProducts(getProducts());
+      // The admin catalog must show database records, not demo fallback items.
+      const databaseProducts = await getProducts({
+        includeDemoFallback: false,
+        includeInactive: false,
+      });
+      setProducts(databaseProducts);
       setCategories(getProductCategories());
       setLoadError("");
-    } catch {
-      setLoadError("Products could not be loaded from browser storage.");
+    } catch (error) {
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : "Products could not be loaded from Supabase.",
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    void refreshProducts();
+
     const onStorage = (event) => {
-      if (event.key === null || event.key === "maliks_products")
-        refreshProducts();
+      if (event.key === null || event.key === "maliks_products") {
+        void refreshProducts();
+      }
     };
+    const onProductsUpdated = () => void refreshProducts();
     window.addEventListener("storage", onStorage);
-    window.addEventListener("maliks-categories-updated", refreshProducts);
-    window.addEventListener("maliks-products-updated", refreshProducts);
+    window.addEventListener("maliks-categories-updated", onProductsUpdated);
+    window.addEventListener("maliks-products-updated", onProductsUpdated);
     return () => {
       window.removeEventListener("storage", onStorage);
-      window.removeEventListener("maliks-categories-updated", refreshProducts);
-      window.removeEventListener("maliks-products-updated", refreshProducts);
+      window.removeEventListener("maliks-categories-updated", onProductsUpdated);
+      window.removeEventListener("maliks-products-updated", onProductsUpdated);
     };
   }, []);
 
@@ -143,7 +145,7 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
       return;
     }
     if (file.size > MAX_PRODUCT_IMAGE_SIZE) {
-      setFormError("Image must be 1 MB or smaller.");
+      setFormError("Image must be 5 MB or smaller.");
       return;
     }
 
@@ -158,6 +160,13 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
         );
         return;
       }
+      // Base64 encoding increases size by ~33%; enforce the limit on the encoded string too.
+      const base64Size = reader.result.length;
+      const maxBase64Size = MAX_PRODUCT_IMAGE_SIZE * 4 / 3;
+      if (base64Size > maxBase64Size) {
+        setFormError("Image must be 5 MB or smaller after encoding.");
+        return;
+      }
       setForm((current) => ({ ...current, image: reader.result }));
       setImageName(file.name);
       setFormError("");
@@ -169,8 +178,9 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
     reader.readAsDataURL(file);
   };
 
-  const saveForm = (event) => {
+  const saveForm = async (event) => {
     event.preventDefault();
+    if (isSaving) return;
     setFormError("");
     setSaveError("");
     const price = Number(form.price);
@@ -193,6 +203,13 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
         return;
       }
     }
+    if (form.image.trim() && form.image.startsWith("data:image/")) {
+      const maxBase64Size = MAX_PRODUCT_IMAGE_SIZE * 4 / 3;
+      if (form.image.length > maxBase64Size) {
+        setFormError("Image must be 5 MB or smaller after encoding.");
+        return;
+      }
+    }
 
     const product = {
       name: form.name.trim(),
@@ -202,11 +219,14 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
       image: form.image.trim(),
     };
 
+    setIsSaving(true);
     try {
-      const updatedProducts = editingProduct
-        ? updateProduct(editingProduct.id, product)
-        : addProduct(product);
-      setProducts(updatedProducts);
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, product);
+      } else {
+        await addProduct(product);
+      }
+      await refreshProducts();
       pushNotification({
         audience: "user",
         type: "product",
@@ -220,27 +240,35 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
       setFormError(
         error instanceof Error ? error.message : "Product could not be saved.",
       );
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const confirmDelete = () => {
-    if (!deletingProduct) return;
+  const confirmDelete = async () => {
+    if (!deletingProduct || isDeleting) return;
+    setIsDeleting(true);
+    setSaveError("");
     try {
-      setProducts(deleteProduct(deletingProduct.id));
+      await deleteProduct(deletingProduct.id);
+      setProducts((current) =>
+        current.filter((product) => String(product.id) !== String(deletingProduct.id)),
+      );
       pushNotification({
         audience: "user",
         type: "product",
         title: "Product removed",
-        message: `${deletingProduct.name} was removed from the catalog.`,
+        message: `${deletingProduct.name} was removed from the public catalog.`,
       });
       setDeletingProduct(null);
-      setSaveError("");
     } catch (error) {
       setSaveError(
         error instanceof Error
           ? error.message
           : "Product could not be removed.",
       );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -307,7 +335,7 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
             role="alert"
             className="mb-4 rounded-xl border border-rose-300/15 bg-rose-300/5 px-4 py-3 text-sm text-rose-200"
           >
-            {loadError} Check browser storage, then reload this page.
+            {loadError} Check your Supabase connection and admin permissions, then retry.
           </p>
         )}
         {saveError && (
@@ -417,7 +445,7 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
                   />
                 </label>
                 <p className="mt-1.5 text-[11px] text-stone-500">
-                  Maximum file size: 1 MB. Or enter an image URL below.
+                  Maximum file size: 5 MB. Or enter an image URL below.
                 </p>
                 {form.image && (
                   <div className="mt-3 flex items-center gap-3 rounded-xl border border-white/7 bg-neutral-950/60 p-2">
@@ -482,9 +510,14 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
                 </button>
                 <button
                   type="submit"
-                  className="min-h-11 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white hover:bg-emerald-500"
+                  disabled={isSaving}
+                  className="min-h-11 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {editingProduct ? "Save Changes" : "Create Product"}
+                  {isSaving
+                    ? "Saving..."
+                    : editingProduct
+                      ? "Save Changes"
+                      : "Create Product"}
                 </button>
               </div>
             </form>
@@ -527,9 +560,13 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
               {filteredProducts.length} product
               {filteredProducts.length === 1 ? "" : "s"}
             </span>
-            <span>Changes save to this browser</span>
+            <span>Changes save to Supabase</span>
           </div>
-          {filteredProducts.length ? (
+          {isLoading ? (
+            <div className="px-5 py-14 text-center text-sm text-stone-400">
+              Loading products from Supabase...
+            </div>
+          ) : filteredProducts.length ? (
             <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4 xl:grid-cols-3">
               {filteredProducts.map((product) => (
                 <article
@@ -624,17 +661,19 @@ const AdminProducts = ({ onNavigate, onOpenNav }) => {
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
+                disabled={isDeleting}
                 onClick={() => setDeletingProduct(null)}
-                className="min-h-11 rounded-xl border border-white/10 px-4 text-sm font-medium text-stone-300 hover:bg-white/4"
+                className="min-h-11 rounded-xl border border-white/10 px-4 text-sm font-medium text-stone-300 hover:bg-white/4 disabled:opacity-60"
               >
                 Cancel
               </button>
               <button
                 type="button"
+                disabled={isDeleting}
                 onClick={confirmDelete}
-                className="min-h-11 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-500"
+                className="min-h-11 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Remove Product
+                {isDeleting ? "Removing..." : "Remove Product"}
               </button>
             </div>
           </section>

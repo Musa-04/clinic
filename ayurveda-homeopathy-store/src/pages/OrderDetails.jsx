@@ -21,6 +21,10 @@ import {
   normalizePaymentStatus,
   updateOrder,
 } from "../utils/orderStorage";
+import {
+  isConfigured,
+  getOrderByIdFromSupabase,
+} from "../utils/orderStorageSupabase";
 import { pushNotification } from "../utils/notificationStore";
 
 const CANCEL_REASONS = [
@@ -33,7 +37,9 @@ const CANCEL_REASONS = [
 ];
 
 const OrderDetails = ({ orderId, onNavigate }) => {
-  const [order, setOrder] = useState(() => getOrderById(orderId));
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [otherReason, setOtherReason] = useState("");
@@ -49,13 +55,52 @@ const OrderDetails = ({ orderId, onNavigate }) => {
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   useEffect(() => {
-    const refreshOrder = () => setOrder(getOrderById(orderId));
-    refreshOrder();
-    window.addEventListener("storage", refreshOrder);
-    window.addEventListener("maliks-orders-updated", refreshOrder);
+    let mounted = true;
+
+    const loadOrder = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        if (isConfigured()) {
+          const supabaseOrder = await getOrderByIdFromSupabase(orderId);
+          if (mounted) setOrder(supabaseOrder);
+        } else {
+          if (mounted) setOrder(getOrderById(orderId));
+        }
+      } catch {
+        if (mounted) {
+          setError("Order details could not be loaded.");
+          setOrder(getOrderById(orderId));
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadOrder();
+
+    const handleStorage = () => {
+      if (!isConfigured()) {
+        setOrder(getOrderById(orderId));
+        setLoading(false);
+      }
+    };
+
+    const handleOrdersUpdated = async () => {
+      if (isConfigured()) {
+        await loadOrder();
+      } else {
+        setOrder(getOrderById(orderId));
+        setLoading(false);
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("maliks-orders-updated", handleOrdersUpdated);
     return () => {
-      window.removeEventListener("storage", refreshOrder);
-      window.removeEventListener("maliks-orders-updated", refreshOrder);
+      mounted = false;
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("maliks-orders-updated", handleOrdersUpdated);
     };
   }, [orderId]);
 
@@ -69,6 +114,17 @@ const OrderDetails = ({ orderId, onNavigate }) => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [cancelOpen, cancelledConfirmation]);
+
+  if (loading) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center bg-neutral-950 px-4 py-16 text-center text-stone-100">
+        <div>
+          <div className="h-10 w-10 rounded-full border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="mt-3 text-sm text-stone-400">Loading order details...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (!order) {
     return (
@@ -167,23 +223,69 @@ const OrderDetails = ({ orderId, onNavigate }) => {
       DELIVERED: 3,
     }[normalizedStatus] ?? 0;
 
-  const handleCancelOrder = () => {
+  const handleCancelOrder = async () => {
     const reason = cancelReason === "Other" ? otherReason.trim() : cancelReason;
     if (!reason) {
       setCancelError("Select a reason to continue.");
       return;
     }
 
-    const updatedOrder = updateOrder(order.id, {
-      orderStatus: "Cancelled",
-      cancellation: {
-        cancelled: true,
-        reason,
-        cancelledAt: new Date().toISOString(),
-      },
-    });
-    if (updatedOrder) {
-      setOrder(updatedOrder);
+    try {
+      if (isConfigured()) {
+        const supabase = await import("../supabaseClient");
+        const { data, error } = await supabase.default
+          .from("orders")
+          .select("order_status")
+          .eq("id", order.id)
+          .maybeSingle();
+
+        if (error || !data) {
+          throw new Error("Order not found.");
+        }
+
+        const currentStatus = data.order_status;
+        if (!["PENDING", "CONFIRMED"].includes(currentStatus)) {
+          throw new Error("This order can no longer be cancelled.");
+        }
+
+        const cancelledAt = new Date().toISOString();
+        const { error: updateError } = await supabase.default
+          .from("orders")
+          .update({
+            order_status: "CANCELLED",
+            cancellation: {
+              cancelled: true,
+              reason,
+              cancelled_at: cancelledAt,
+            },
+            updated_at: cancelledAt,
+          })
+          .eq("id", order.id);
+
+        if (updateError) throw updateError;
+
+        await supabase.default.from("order_status_history").insert({
+          order_id: order.id,
+          status: "CANCELLED",
+          created_at: cancelledAt,
+        });
+
+        const updatedOrder = await getOrderByIdFromSupabase(order.id);
+        setOrder(updatedOrder);
+      } else {
+        const updatedOrder = updateOrder(order.id, {
+          orderStatus: "Cancelled",
+          cancellation: {
+            cancelled: true,
+            reason,
+            cancelledAt: new Date().toISOString(),
+          },
+        });
+        if (updatedOrder) {
+          setOrder(updatedOrder);
+        }
+      }
+
       setCancelledConfirmation(true);
       setCancelError("");
       pushNotification({
@@ -193,6 +295,8 @@ const OrderDetails = ({ orderId, onNavigate }) => {
         message: `Order ${order.id} was cancelled by the customer. Reason: ${reason}`,
         meta: { orderId: order.id },
       });
+    } catch {
+      setCancelError("The order could not be cancelled. Please try again.");
     }
   };
 
@@ -393,13 +497,33 @@ const OrderDetails = ({ orderId, onNavigate }) => {
                         tags: feedbackTags,
                         submittedAt: new Date().toISOString(),
                       };
-                      const updated = updateOrder(order.id, {
-                        feedback: feedbackData,
-                      });
-                      if (updated) {
-                        setOrder(updated);
-                        setFeedbackSubmitted(true);
-                      }
+
+                      const saveFeedback = async () => {
+                        if (isConfigured()) {
+                          const supabase = await import("../supabaseClient");
+                          const { error } = await supabase.default
+                            .from("orders")
+                            .update({ feedback: feedbackData })
+                            .eq("id", order.id);
+                          if (error) throw error;
+                        } else {
+                          const updated = updateOrder(order.id, {
+                            feedback: feedbackData,
+                          });
+                          if (!updated) throw new Error("Failed to save feedback");
+                        }
+                      };
+
+                      saveFeedback()
+                        .then(() => {
+                          setFeedbackSubmitted(true);
+                          setOrder((prev) =>
+                            prev ? { ...prev, feedback: feedbackData } : prev,
+                          );
+                        })
+                        .catch(() => {
+                          setCancelError("Feedback could not be saved. Please try again.");
+                        });
                     }}
                     className="mt-4 space-y-4"
                   >
